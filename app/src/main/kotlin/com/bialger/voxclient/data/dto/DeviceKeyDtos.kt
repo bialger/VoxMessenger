@@ -22,6 +22,8 @@ data class RotateSignedPreKeyRequestDto(
 )
 
 data class DevicePreKeyBundleDto(
+    @SerializedName("user_id")
+    val userId: String? = null,
     @SerializedName("device_id")
     val deviceId: String,
     @SerializedName("identity_key_public")

@@ -13,6 +13,7 @@ import com.bialger.voxclient.core.model.ServerHealth
 import com.bialger.voxclient.data.repository.RetrofitServerHealthRepository
 import com.bialger.voxclient.databinding.FragmentWelcomeBinding
 import com.bialger.voxclient.domain.usecase.CheckServerHealthUseCase
+import com.bialger.voxclient.ui.auth.AuthFragment
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 import java.util.Locale
@@ -34,12 +35,15 @@ class WelcomeFragment : Fragment(R.layout.fragment_welcome) {
         super.onViewCreated(view, savedInstanceState)
         _binding = FragmentWelcomeBinding.bind(view)
 
-        binding.titleLabel.text = "Vox Messenger"
-        binding.subtitleLabel.text = "Private messaging on your server"
-        binding.securityLabel.text = "Your keys stay on this device"
-
         binding.checkServerButton.setOnClickListener {
             checkServerHealth()
+        }
+        binding.continueAuthButton.setOnClickListener {
+            val initialServer = binding.serverInput.text?.toString().orEmpty().trim()
+            parentFragmentManager.beginTransaction()
+                .replace(R.id.mainFragmentContainer, AuthFragment.newInstance(initialServer))
+                .addToBackStack(AuthFragment::class.java.simpleName)
+                .commit()
         }
     }
 
@@ -58,7 +62,7 @@ class WelcomeFragment : Fragment(R.layout.fragment_welcome) {
     private fun checkServerHealth() {
         val requestId = requestGeneration.incrementAndGet()
         val serverBaseUrl = binding.serverInput.text?.toString().orEmpty()
-        binding.serverStatusLabel.text = "Checking..."
+        binding.serverStatusLabel.text = getString(R.string.welcome_status_checking)
         updateLastCheckedLabel()
 
         backgroundExecutor.execute {
@@ -78,14 +82,15 @@ class WelcomeFragment : Fragment(R.layout.fragment_welcome) {
         when (result) {
             is VoxResult.Success -> {
                 val statusText = result.value.status.uppercase(Locale.ROOT)
-                currentBinding.serverStatusLabel.text = "Server: $statusText"
+                currentBinding.serverStatusLabel.text =
+                    getString(R.string.welcome_status_server, statusText)
             }
             is VoxResult.Failure -> {
                 currentBinding.serverStatusLabel.text =
                     if (result.error is VoxError.Validation) {
-                        "Server: Invalid URL"
+                        getString(R.string.welcome_status_invalid_url)
                     } else {
-                        "Server: Unreachable"
+                        getString(R.string.welcome_status_unreachable)
                     }
                 logNetworkFailure(result.error)
             }
@@ -102,7 +107,8 @@ class WelcomeFragment : Fragment(R.layout.fragment_welcome) {
 
     private fun updateLastCheckedLabel() {
         mainHandler.post {
-            _binding?.lastCheckedLabel?.text = "Last checked: ${LocalTime.now().format(timeFormatter)}"
+            _binding?.lastCheckedLabel?.text =
+                getString(R.string.welcome_last_checked, LocalTime.now().format(timeFormatter))
         }
     }
 

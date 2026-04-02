@@ -17,6 +17,8 @@ sealed interface VoxWebSocketEventDto {
         val envelopeId: String,
         @SerializedName("conversation_id")
         val conversationId: String,
+        @SerializedName("sender_user_id")
+        val senderUserId: String? = null,
         @SerializedName("sender_device_id")
         val senderDeviceId: String,
         @SerializedName("ciphertext")
