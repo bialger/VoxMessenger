@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:gravity="end"
+    android:orientation="vertical"
+    android:paddingVertical="@dimen/vox_spacing_4">
+
+    <TextView
+        android:id="@+id/authorLabel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="2dp"
+        android:textColor="@color/vox_color_subtle_text"
+        android:textSize="11sp"
+        android:visibility="gone" />
+
+    <TextView
+        android:id="@+id/messageBubble"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@drawable/bg_message_outgoing"
+        android:paddingHorizontal="@dimen/vox_spacing_12"
+        android:paddingVertical="@dimen/vox_spacing_8"
+        android:textColor="@color/vox_color_on_primary"
+        android:textSize="15sp" />
+
+    <TextView
+        android:id="@+id/timestampLabel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="2dp"
+        android:textColor="@color/vox_color_subtle_text"
+        android:textSize="11sp" />
+
+</LinearLayout>

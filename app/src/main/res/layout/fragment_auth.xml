@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/vox_color_background"
+    android:fitsSystemWindows="true"
+    android:padding="@dimen/vox_spacing_24">
+
+    <com.google.android.material.appbar.MaterialToolbar
+        android:id="@+id/authToolbar"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:background="@color/vox_color_surface"
+        android:elevation="0dp"
+        android:title="@string/auth_title"
+        android:titleTextColor="@color/vox_color_on_surface"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:navigationContentDescription="@string/common_action_back"
+        app:navigationIcon="@drawable/ic_arrow_back_24" />
+
+    <TextView
+        android:id="@+id/authSubtitleLabel"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/vox_spacing_12"
+        android:text="@string/auth_subtitle"
+        android:textAppearance="?attr/textAppearanceBody1"
+        android:textColor="@color/vox_color_subtle_text"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/authToolbar" />
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/serverInputLayout"
+        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/vox_spacing_16"
+        android:hint="@string/welcome_server_hint"
+        app:boxBackgroundColor="@color/vox_color_surface"
+        app:boxStrokeColor="@color/vox_color_border"
+        app:hintTextColor="@color/vox_color_subtle_text"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/authSubtitleLabel">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/serverInput"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:inputType="textUri"
+            android:maxLines="1"
+            android:textColor="@color/vox_color_on_surface"
+            android:textColorHint="@color/vox_color_subtle_text" />
+
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/usernameInputLayout"
+        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/vox_spacing_12"
+        android:hint="@string/auth_username_hint"
+        app:boxBackgroundColor="@color/vox_color_surface"
+        app:boxStrokeColor="@color/vox_color_border"
+        app:hintTextColor="@color/vox_color_subtle_text"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/serverInputLayout">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/usernameInput"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:inputType="textPersonName"
+            android:maxLines="1"
+            android:textColor="@color/vox_color_on_surface"
+            android:textColorHint="@color/vox_color_subtle_text" />
+
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/passwordInputLayout"
+        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/vox_spacing_12"
+        android:hint="@string/auth_password_hint"
+        app:boxBackgroundColor="@color/vox_color_surface"
+        app:boxStrokeColor="@color/vox_color_border"
+        app:hintTextColor="@color/vox_color_subtle_text"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/usernameInputLayout">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/passwordInput"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:inputType="textPassword"
+            android:maxLines="1"
+            android:textColor="@color/vox_color_on_surface"
+            android:textColorHint="@color/vox_color_subtle_text" />
+
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <Button
+        android:id="@+id/signInButton"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/vox_spacing_16"
+        android:text="@string/auth_action_sign_in"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/passwordInputLayout" />
+
+    <Button
+        android:id="@+id/signUpButton"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/vox_spacing_8"
+        android:text="@string/auth_action_sign_up"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/signInButton" />
+
+    <ProgressBar
+        android:id="@+id/authProgress"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/vox_spacing_8"
+        android:visibility="gone"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/signUpButton" />
+
+    <TextView
+        android:id="@+id/authStatusLabel"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/vox_spacing_16"
+        android:text="@string/auth_status_ready"
+        android:textAppearance="?attr/textAppearanceBody2"
+        android:textColor="@color/vox_color_subtle_text"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/authProgress" />
+
+    <TextView
+        android:id="@+id/mockHintLabel"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/vox_spacing_8"
+        android:text="@string/auth_hint_mock_credentials"
+        android:textAppearance="?attr/textAppearanceCaption"
+        android:textColor="@color/vox_color_subtle_text"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/authStatusLabel" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>
