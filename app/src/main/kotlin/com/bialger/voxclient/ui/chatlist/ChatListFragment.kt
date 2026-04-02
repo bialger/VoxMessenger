@@ -58,6 +58,7 @@ class ChatListFragment : Fragment(R.layout.fragment_chat_list) {
     private val backgroundExecutor: ExecutorService = Executors.newSingleThreadExecutor()
     private val timestampFormatter = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm")
     private val dmPeerUserIdByConversationId = mutableMapOf<String, String>()
+    private val dmPeerUsernameByConversationId = mutableMapOf<String, String>()
     private val channelTitleByConversationId = mutableMapOf<String, String>()
     private val usernameByUserId = mutableMapOf<String, String>()
     private val pendingConversationItemsById = linkedMapOf<String, ChatListItemUi>()
@@ -213,12 +214,15 @@ class ChatListFragment : Fragment(R.layout.fragment_chat_list) {
 
     private fun buildChatListItems(conversations: List<VoxConversationSummary>): List<ChatListItemUi> {
         val cachedDmPeerByConversationId = dmPeerUserIdByConversationId.toMap()
+        val cachedDmPeerUsernameByConversationId = dmPeerUsernameByConversationId.toMap()
         val cachedChannelTitlesByConversationId = channelTitleByConversationId.toMap()
         val cachedUsernameByUserId = usernameByUserId.toMap()
         dmPeerUserIdByConversationId.clear()
+        dmPeerUsernameByConversationId.clear()
         channelTitleByConversationId.clear()
         usernameByUserId.clear()
         dmPeerUserIdByConversationId.putAll(cachedDmPeerByConversationId)
+        dmPeerUsernameByConversationId.putAll(cachedDmPeerUsernameByConversationId)
         channelTitleByConversationId.putAll(cachedChannelTitlesByConversationId)
         usernameByUserId.putAll(cachedUsernameByUserId)
         if (session.userId.isNotBlank() && session.username.isNotBlank()) {
@@ -232,24 +236,54 @@ class ChatListFragment : Fragment(R.layout.fragment_chat_list) {
                 username = conversation.createdByUsername,
                 unresolvedUserIds = unresolvedUserIds,
             )
+            rememberResolvedUsername(
+                userId = conversation.peerUserId,
+                username = conversation.peerUsername,
+                unresolvedUserIds = unresolvedUserIds,
+            )
+
+            if (conversation.type == TYPE_DM) {
+                val summaryPeerUserId = conversation.peerUserId?.trim().orEmpty()
+                if (summaryPeerUserId.isNotEmpty()) {
+                    dmPeerUserIdByConversationId[conversation.conversationId] = summaryPeerUserId
+                }
+                val summaryPeerUsername = conversation.peerUsername?.trim().orEmpty()
+                if (summaryPeerUsername.isNotEmpty()) {
+                    dmPeerUsernameByConversationId[conversation.conversationId] = summaryPeerUsername
+                }
+            }
+
+            val shouldLoadMembers =
+                conversation.type != TYPE_DM ||
+                    conversation.peerUserId.isNullOrBlank() ||
+                    conversation.peerUsername.isNullOrBlank()
             val membersResult =
-                loadConversationMembersUseCase(
-                    serverBaseUrl = session.serverBaseUrl,
-                    accessToken = session.accessToken,
-                    conversationId = conversation.conversationId,
-                )
+                if (shouldLoadMembers) {
+                    loadConversationMembersUseCase(
+                        serverBaseUrl = session.serverBaseUrl,
+                        accessToken = session.accessToken,
+                        conversationId = conversation.conversationId,
+                    )
+                } else {
+                    null
+                }
             if (membersResult is VoxResult.Success) {
                 rememberUsernamesFromMembers(
                     response = membersResult.value,
                     unresolvedUserIds = unresolvedUserIds,
                 )
-                val memberIds = extractMemberUserIds(membersResult.value)
+                val memberEntries = extractMemberEntries(membersResult.value)
                 if (conversation.type == TYPE_DM) {
-                    val peerUserId =
-                        memberIds.firstOrNull { it != session.userId }
-                            ?: memberIds.firstOrNull()
-                    if (!peerUserId.isNullOrBlank()) {
+                    val peerMember =
+                        memberEntries.firstOrNull { it.userId != session.userId }
+                            ?: memberEntries.firstOrNull()
+                    val peerUserId = peerMember?.userId?.trim().orEmpty()
+                    if (peerUserId.isNotEmpty()) {
                         dmPeerUserIdByConversationId[conversation.conversationId] = peerUserId
+                    }
+                    val peerUsername = peerMember?.username?.trim().orEmpty()
+                    if (peerUsername.isNotEmpty()) {
+                        dmPeerUsernameByConversationId[conversation.conversationId] = peerUsername
                     }
                 }
             }
@@ -355,14 +389,12 @@ class ChatListFragment : Fragment(R.layout.fragment_chat_list) {
         }
     }
 
-    private fun extractMemberUserIds(response: VoxConversationMembers): List<String> {
-        val ids =
-            buildList {
-                addAll(response.members.map(VoxConversationMember::userId))
-                addAll(response.admins.map(VoxConversationMember::userId))
-                addAll(response.subscribers.map(VoxConversationMember::userId))
-            }
-        return ids.distinct()
+    private fun extractMemberEntries(response: VoxConversationMembers): List<VoxConversationMember> {
+        return buildList {
+            addAll(response.members)
+            addAll(response.admins)
+            addAll(response.subscribers)
+        }.distinctBy(VoxConversationMember::userId)
     }
 
     private fun VoxConversationSummary.toChatListItem(): ChatListItemUi {
@@ -398,24 +430,35 @@ class ChatListFragment : Fragment(R.layout.fragment_chat_list) {
     }
 
     private fun VoxConversationSummary.resolveDmTitle(): String {
-        val rawPeerUserId = dmPeerUserIdByConversationId[conversationId]
-        val peerUserId =
+        val preferredPeerUsername = dmPeerUsernameByConversationId[conversationId]?.trim().orEmpty()
+        if (preferredPeerUsername.isNotEmpty()) {
+            return preferredPeerUsername
+        }
+
+        val rawPeerUserId = dmPeerUserIdByConversationId[conversationId] ?: peerUserId
+        val resolvedPeerUserId =
             when {
                 !rawPeerUserId.isNullOrBlank() && rawPeerUserId != session.userId -> rawPeerUserId
                 createdBy != session.userId -> createdBy
                 else -> rawPeerUserId
             }
 
-        if (peerUserId == session.userId) {
+        if (resolvedPeerUserId == session.userId) {
             return session.username.ifBlank { sixCharPiece(session.userId) }
         }
 
-        if (!peerUserId.isNullOrBlank()) {
-            val cachedUsername = usernameByUserId[peerUserId]?.trim().orEmpty()
+        if (!resolvedPeerUserId.isNullOrBlank()) {
+            if (resolvedPeerUserId == peerUserId) {
+                val summaryPeerUsername = peerUsername?.trim().orEmpty()
+                if (summaryPeerUsername.isNotEmpty()) {
+                    return summaryPeerUsername
+                }
+            }
+            val cachedUsername = usernameByUserId[resolvedPeerUserId]?.trim().orEmpty()
             if (cachedUsername.isNotEmpty()) {
                 return cachedUsername
             }
-            return sixCharPiece(peerUserId)
+            return sixCharPiece(resolvedPeerUserId)
         }
 
         val createdByUsername = usernameByUserId[createdBy]?.trim().orEmpty()
@@ -727,6 +770,12 @@ class ChatListFragment : Fragment(R.layout.fragment_chat_list) {
                 }
                 when (creation) {
                     is VoxResult.Success -> {
+                        if (resolved is VoxResult.Success && resolved.value.isNotBlank()) {
+                            dmPeerUserIdByConversationId[creation.value] = resolved.value
+                        }
+                        if (!resolvedPeerUsername.isNullOrBlank()) {
+                            dmPeerUsernameByConversationId[creation.value] = resolvedPeerUsername
+                        }
                         val item =
                             ChatListItemUi(
                                 conversationId = creation.value,

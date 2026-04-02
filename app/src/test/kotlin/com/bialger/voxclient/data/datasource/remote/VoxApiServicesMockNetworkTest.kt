@@ -599,11 +599,15 @@ class VoxApiServicesMockNetworkTest {
 
     @Test
     fun listConversationsEndpoint_isCovered() {
-        enqueueJson("""{"conversations":[{"conversation_id":"conv_1","type":0,"created_by":"usr_1","created_at":1,"membership_version":3}]}""")
+        enqueueJson(
+            """{"conversations":[{"conversation_id":"conv_1","type":0,"created_by":"usr_1","created_by_username":"alice","peer_user_id":"usr_2","peer_username":"bob","created_at":1,"membership_version":3}]}""",
+        )
 
         val response = conversationApi.loadConversations(BEARER).execute()
         assertTrue(response.isSuccessful)
         assertEquals(1, response.body()?.conversations?.size)
+        assertEquals("usr_2", response.body()?.conversations?.first()?.peerUserId)
+        assertEquals("bob", response.body()?.conversations?.first()?.peerUsername)
 
         val request = takeRequest()
         assertEquals("GET", request.method)
@@ -631,13 +635,15 @@ class VoxApiServicesMockNetworkTest {
     fun getConversationDmShape_isCovered() {
         enqueueJson(
             """
-            {"conversation_id":"conv_dm","type":0,"created_by":"usr_1","created_at":1,"membership_version":2,"my_role":"member"}
+            {"conversation_id":"conv_dm","type":0,"created_by":"usr_1","peer_user_id":"usr_2","peer_username":"bob","created_at":1,"membership_version":2,"my_role":"member"}
             """.trimIndent(),
         )
 
         val response = conversationApi.getConversation(BEARER, "conv_dm").execute()
         assertTrue(response.isSuccessful)
         assertEquals(0, response.body()?.type)
+        assertEquals("usr_2", response.body()?.peerUserId)
+        assertEquals("bob", response.body()?.peerUsername)
         assertEquals(null, response.body()?.title)
         assertEquals(null, response.body()?.channelPostPolicy)
     }
