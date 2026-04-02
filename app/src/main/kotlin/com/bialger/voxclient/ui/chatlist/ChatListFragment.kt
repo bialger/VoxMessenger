@@ -45,7 +45,9 @@ class ChatListFragment : Fragment(R.layout.fragment_chat_list) {
     private val folderPagerAdapter = ChatFoldersPagerAdapter(::openConversation)
     private val loadChatListUseCase = AppGraph.loadChatListUseCase
     private val resolveUserIdByUsernameUseCase = AppGraph.resolveUserIdByUsernameUseCase
-    private val resolveUsernamesByUserIdsUseCase = AppGraph.resolveUsernamesByUserIdsUseCase
+    private val fetchUsernameByUserIdUseCase = AppGraph.fetchUsernameByUserIdUseCase
+    private val fetchUsernamesBatchByUserIdsUseCase = AppGraph.fetchUsernamesBatchByUserIdsUseCase
+    private val registerUsernamesBatchUseCase = AppGraph.registerUsernamesBatchUseCase
     private val createDmUseCase = AppGraph.createDmUseCase
     private val createGroupUseCase = AppGraph.createGroupUseCase
     private val createChannelUseCase = AppGraph.createChannelUseCase
@@ -54,7 +56,7 @@ class ChatListFragment : Fragment(R.layout.fragment_chat_list) {
     private val loadConversationMembersUseCase = AppGraph.loadConversationMembersUseCase
     private val mainHandler = Handler(Looper.getMainLooper())
     private val backgroundExecutor: ExecutorService = Executors.newSingleThreadExecutor()
-    private val timestampFormatter = DateTimeFormatter.ofPattern("MM-dd HH:mm")
+    private val timestampFormatter = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm")
     private val dmPeerUserIdByConversationId = mutableMapOf<String, String>()
     private val channelTitleByConversationId = mutableMapOf<String, String>()
     private val usernameByUserId = mutableMapOf<String, String>()
@@ -268,10 +270,18 @@ class ChatListFragment : Fragment(R.layout.fragment_chat_list) {
             }
         }
 
+        if (usernameByUserId.isNotEmpty()) {
+            registerUsernamesBatchUseCase(
+                serverBaseUrl = session.serverBaseUrl,
+                accessToken = session.accessToken,
+                usernamesByUserId = usernameByUserId,
+            )
+        }
+
         if (unresolvedUserIds.isNotEmpty()) {
             when (
                 val resolved =
-                    resolveUsernamesByUserIdsUseCase(
+                    fetchUsernamesBatchByUserIdsUseCase(
                         serverBaseUrl = session.serverBaseUrl,
                         accessToken = session.accessToken,
                         userIds = unresolvedUserIds,
@@ -401,7 +411,16 @@ class ChatListFragment : Fragment(R.layout.fragment_chat_list) {
         }
 
         if (!peerUserId.isNullOrBlank()) {
+            val cachedUsername = usernameByUserId[peerUserId]?.trim().orEmpty()
+            if (cachedUsername.isNotEmpty()) {
+                return cachedUsername
+            }
             return sixCharPiece(peerUserId)
+        }
+
+        val createdByUsername = usernameByUserId[createdBy]?.trim().orEmpty()
+        if (createdByUsername.isNotEmpty()) {
+            return createdByUsername
         }
 
         return sixCharPiece(conversationId)
@@ -657,16 +676,40 @@ class ChatListFragment : Fragment(R.layout.fragment_chat_list) {
                 accessToken = session.accessToken,
                 username = peerUsername,
             )
+            val resolvedPeerUsername =
+                if (resolved is VoxResult.Success && resolved.value.isNotBlank()) {
+                    when (
+                        val usernameResult =
+                            fetchUsernameByUserIdUseCase(
+                                serverBaseUrl = session.serverBaseUrl,
+                                accessToken = session.accessToken,
+                                userId = resolved.value,
+                            )
+                    ) {
+                        is VoxResult.Success -> usernameResult.value.trim().ifBlank { null }
+                        is VoxResult.Failure -> null
+                    }
+                } else {
+                    null
+                }
             val peerTitle =
                 if (resolved is VoxResult.Success && resolved.value.isNotBlank()) {
                     if (resolved.value == session.userId) {
                         session.username.ifBlank { sixCharPiece(session.userId) }
                     } else {
-                        sixCharPiece(resolved.value)
+                        resolvedPeerUsername ?: peerUsername
                     }
                 } else {
-                    sixCharPiece(peerUsername)
+                    peerUsername
                 }
+            if (resolved is VoxResult.Success && resolved.value.isNotBlank() && !resolvedPeerUsername.isNullOrBlank()) {
+                registerUsernamesBatchUseCase(
+                    serverBaseUrl = session.serverBaseUrl,
+                    accessToken = session.accessToken,
+                    usernamesByUserId = mapOf(resolved.value to resolvedPeerUsername),
+                )
+                usernameByUserId[resolved.value] = resolvedPeerUsername
+            }
             val creation =
                 if (resolved is VoxResult.Success) {
                     createDmUseCase(
