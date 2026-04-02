@@ -15,13 +15,13 @@ import androidx.fragment.app.viewModels
 import androidx.viewpager2.widget.ViewPager2
 import com.bialger.voxclient.R
 import com.bialger.voxclient.core.common.result.VoxResult
-import com.bialger.voxclient.data.dto.ConversationMemberDto
-import com.bialger.voxclient.data.dto.ConversationMembersResponseDto
-import com.bialger.voxclient.data.dto.ConversationSummaryDto
-import com.bialger.voxclient.data.repository.VoxConversationRemoteRepository
 import com.bialger.voxclient.databinding.DialogCreateGroupChannelBinding
 import com.bialger.voxclient.databinding.DialogCreateChatBinding
 import com.bialger.voxclient.databinding.FragmentChatListBinding
+import com.bialger.voxclient.di.AppGraph
+import com.bialger.voxclient.domain.entity.VoxConversationMember
+import com.bialger.voxclient.domain.entity.VoxConversationMembers
+import com.bialger.voxclient.domain.entity.VoxConversationSummary
 import com.bialger.voxclient.ui.auth.AuthFragment
 import com.bialger.voxclient.ui.conversation.ConversationFragment
 import com.bialger.voxclient.ui.session.UserSessionArgs
@@ -43,7 +43,15 @@ class ChatListFragment : Fragment(R.layout.fragment_chat_list) {
 
     private val viewModel: ChatListViewModel by viewModels()
     private val folderPagerAdapter = ChatFoldersPagerAdapter(::openConversation)
-    private val repository = VoxConversationRemoteRepository()
+    private val loadChatListUseCase = AppGraph.loadChatListUseCase
+    private val resolveUserIdByUsernameUseCase = AppGraph.resolveUserIdByUsernameUseCase
+    private val resolveUsernamesByUserIdsUseCase = AppGraph.resolveUsernamesByUserIdsUseCase
+    private val createDmUseCase = AppGraph.createDmUseCase
+    private val createGroupUseCase = AppGraph.createGroupUseCase
+    private val createChannelUseCase = AppGraph.createChannelUseCase
+    private val subscribeToChannelUseCase = AppGraph.subscribeToChannelUseCase
+    private val loadConversationDetailsUseCase = AppGraph.loadConversationDetailsUseCase
+    private val loadConversationMembersUseCase = AppGraph.loadConversationMembersUseCase
     private val mainHandler = Handler(Looper.getMainLooper())
     private val backgroundExecutor: ExecutorService = Executors.newSingleThreadExecutor()
     private val timestampFormatter = DateTimeFormatter.ofPattern("MM-dd HH:mm")
@@ -152,7 +160,7 @@ class ChatListFragment : Fragment(R.layout.fragment_chat_list) {
 
         viewModel.setLoading()
         backgroundExecutor.execute {
-            val result = repository.loadConversations(session.serverBaseUrl, session.accessToken)
+            val result = loadChatListUseCase(session.serverBaseUrl, session.accessToken)
             mainHandler.post {
                 if (_binding == null) {
                     return@post
@@ -201,7 +209,7 @@ class ChatListFragment : Fragment(R.layout.fragment_chat_list) {
             }
     }
 
-    private fun buildChatListItems(conversations: List<ConversationSummaryDto>): List<ChatListItemUi> {
+    private fun buildChatListItems(conversations: List<VoxConversationSummary>): List<ChatListItemUi> {
         val cachedDmPeerByConversationId = dmPeerUserIdByConversationId.toMap()
         val cachedChannelTitlesByConversationId = channelTitleByConversationId.toMap()
         val cachedUsernameByUserId = usernameByUserId.toMap()
@@ -223,7 +231,7 @@ class ChatListFragment : Fragment(R.layout.fragment_chat_list) {
                 unresolvedUserIds = unresolvedUserIds,
             )
             val membersResult =
-                repository.loadConversationMembers(
+                loadConversationMembersUseCase(
                     serverBaseUrl = session.serverBaseUrl,
                     accessToken = session.accessToken,
                     conversationId = conversation.conversationId,
@@ -246,7 +254,7 @@ class ChatListFragment : Fragment(R.layout.fragment_chat_list) {
 
             if (conversation.type == TYPE_CHANNEL) {
                 val detailResult =
-                    repository.loadConversationDetails(
+                    loadConversationDetailsUseCase(
                         serverBaseUrl = session.serverBaseUrl,
                         accessToken = session.accessToken,
                         conversationId = conversation.conversationId,
@@ -263,7 +271,7 @@ class ChatListFragment : Fragment(R.layout.fragment_chat_list) {
         if (unresolvedUserIds.isNotEmpty()) {
             when (
                 val resolved =
-                    repository.resolveUsernamesByUserIds(
+                    resolveUsernamesByUserIdsUseCase(
                         serverBaseUrl = session.serverBaseUrl,
                         accessToken = session.accessToken,
                         userIds = unresolvedUserIds,
@@ -289,7 +297,7 @@ class ChatListFragment : Fragment(R.layout.fragment_chat_list) {
     }
 
     private fun rememberUsernamesFromMembers(
-        response: ConversationMembersResponseDto,
+        response: VoxConversationMembers,
         unresolvedUserIds: MutableSet<String>,
     ) {
         response.members.orEmpty().forEach { member ->
@@ -337,17 +345,17 @@ class ChatListFragment : Fragment(R.layout.fragment_chat_list) {
         }
     }
 
-    private fun extractMemberUserIds(response: ConversationMembersResponseDto): List<String> {
+    private fun extractMemberUserIds(response: VoxConversationMembers): List<String> {
         val ids =
             buildList {
-                addAll(response.members.orEmpty().map(ConversationMemberDto::userId))
-                addAll(response.admins.orEmpty().map(ConversationMemberDto::userId))
-                addAll(response.subscribers.orEmpty().map(ConversationMemberDto::userId))
+                addAll(response.members.map(VoxConversationMember::userId))
+                addAll(response.admins.map(VoxConversationMember::userId))
+                addAll(response.subscribers.map(VoxConversationMember::userId))
             }
         return ids.distinct()
     }
 
-    private fun ConversationSummaryDto.toChatListItem(): ChatListItemUi {
+    private fun VoxConversationSummary.toChatListItem(): ChatListItemUi {
         val typeLabel =
             when (type) {
                 TYPE_DM -> getString(R.string.chat_list_type_dm)
@@ -379,7 +387,7 @@ class ChatListFragment : Fragment(R.layout.fragment_chat_list) {
         )
     }
 
-    private fun ConversationSummaryDto.resolveDmTitle(): String {
+    private fun VoxConversationSummary.resolveDmTitle(): String {
         val rawPeerUserId = dmPeerUserIdByConversationId[conversationId]
         val peerUserId =
             when {
@@ -644,7 +652,7 @@ class ChatListFragment : Fragment(R.layout.fragment_chat_list) {
 
         Toast.makeText(requireContext(), R.string.chat_create_status_creating, Toast.LENGTH_SHORT).show()
         backgroundExecutor.execute {
-            val resolved = repository.resolveUserIdByUsername(
+            val resolved = resolveUserIdByUsernameUseCase(
                 serverBaseUrl = session.serverBaseUrl,
                 accessToken = session.accessToken,
                 username = peerUsername,
@@ -661,7 +669,7 @@ class ChatListFragment : Fragment(R.layout.fragment_chat_list) {
                 }
             val creation =
                 if (resolved is VoxResult.Success) {
-                    repository.createDmConversation(
+                    createDmUseCase(
                         serverBaseUrl = session.serverBaseUrl,
                         accessToken = session.accessToken,
                         peerUserId = resolved.value,
@@ -733,7 +741,7 @@ class ChatListFragment : Fragment(R.layout.fragment_chat_list) {
         Toast.makeText(requireContext(), R.string.chat_subscribe_status_subscribing, Toast.LENGTH_SHORT).show()
         backgroundExecutor.execute {
             val result =
-                repository.subscribeToChannel(
+                subscribeToChannelUseCase(
                     serverBaseUrl = session.serverBaseUrl,
                     accessToken = session.accessToken,
                     conversationId = channelId,
@@ -840,7 +848,7 @@ class ChatListFragment : Fragment(R.layout.fragment_chat_list) {
                         (listOf(session.userId) + adminResolved.ids)
                             .filter { it.isNotBlank() }
                             .distinct()
-                    repository.createChannelConversation(
+                    createChannelUseCase(
                         serverBaseUrl = session.serverBaseUrl,
                         accessToken = session.accessToken,
                         adminUserIds = adminIds,
@@ -862,7 +870,7 @@ class ChatListFragment : Fragment(R.layout.fragment_chat_list) {
                         postCreationError(getString(R.string.chat_create_error_members_required))
                         return@execute
                     }
-                    repository.createGroupConversation(
+                    createGroupUseCase(
                         serverBaseUrl = session.serverBaseUrl,
                         accessToken = session.accessToken,
                         memberUserIds = members,
@@ -914,7 +922,7 @@ class ChatListFragment : Fragment(R.layout.fragment_chat_list) {
         val resolvedIds = mutableListOf<String>()
         usernames.filter { it.isNotBlank() }.forEach { username ->
             val resolved =
-                repository.resolveUserIdByUsername(
+                resolveUserIdByUsernameUseCase(
                     serverBaseUrl = session.serverBaseUrl,
                     accessToken = session.accessToken,
                     username = username,

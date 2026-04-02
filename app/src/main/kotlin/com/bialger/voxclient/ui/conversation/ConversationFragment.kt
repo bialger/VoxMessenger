@@ -17,10 +17,11 @@ import androidx.fragment.app.viewModels
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.bialger.voxclient.R
 import com.bialger.voxclient.core.common.result.VoxResult
-import com.bialger.voxclient.data.dto.SendMessageRequestDto
-import com.bialger.voxclient.data.repository.VoxConversationRemoteRepository
 import com.bialger.voxclient.databinding.DialogAddMemberBinding
 import com.bialger.voxclient.databinding.FragmentConversationBinding
+import com.bialger.voxclient.di.AppGraph
+import com.bialger.voxclient.domain.entity.VoxConversationEnvelope
+import com.bialger.voxclient.domain.entity.VoxSendMessageCommand
 import com.bialger.voxclient.ui.common.MessageCipherCodec
 import com.bialger.voxclient.ui.session.UserSessionArgs
 import com.bialger.voxclient.ui.session.readUserSessionArgs
@@ -40,7 +41,11 @@ class ConversationFragment : Fragment(R.layout.fragment_conversation) {
     private val binding get() = _binding ?: error("Binding is only valid between onViewCreated and onDestroyView")
     private val viewModel: ConversationViewModel by viewModels()
     private val messageAdapter = MessageAdapter()
-    private val repository = VoxConversationRemoteRepository()
+    private val loadConversationHistoryUseCase = AppGraph.loadConversationHistoryUseCase
+    private val sendMessageUseCase = AppGraph.sendMessageUseCase
+    private val loadConversationDetailsUseCase = AppGraph.loadConversationDetailsUseCase
+    private val resolveUserIdByUsernameUseCase = AppGraph.resolveUserIdByUsernameUseCase
+    private val addConversationMemberUseCase = AppGraph.addConversationMemberUseCase
     private val mainHandler = Handler(Looper.getMainLooper())
     private val backgroundExecutor: ExecutorService = Executors.newSingleThreadExecutor()
     private val timestampFormatter = DateTimeFormatter.ofPattern("MM-dd HH:mm")
@@ -131,7 +136,7 @@ class ConversationFragment : Fragment(R.layout.fragment_conversation) {
 
         Toast.makeText(requireContext(), R.string.conversation_loading, Toast.LENGTH_SHORT).show()
         backgroundExecutor.execute {
-            val result = repository.loadHistory(
+            val result = loadConversationHistoryUseCase(
                 serverBaseUrl = session.serverBaseUrl,
                 accessToken = session.accessToken,
                 conversationId = conversationId,
@@ -201,8 +206,8 @@ class ConversationFragment : Fragment(R.layout.fragment_conversation) {
 
         binding.sendButton.isEnabled = false
         val ciphertext = MessageCipherCodec.encrypt(rawInput)
-        val request =
-            SendMessageRequestDto(
+        val command =
+            VoxSendMessageCommand(
                 deviceId = session.deviceId,
                 conversationId = conversationId,
                 ciphertext = ciphertext,
@@ -211,10 +216,10 @@ class ConversationFragment : Fragment(R.layout.fragment_conversation) {
                 orderingEpoch = null,
             )
         backgroundExecutor.execute {
-            val result = repository.sendMessage(
+            val result = sendMessageUseCase(
                 serverBaseUrl = session.serverBaseUrl,
                 accessToken = session.accessToken,
-                request = request,
+                command = command,
             )
             mainHandler.post {
                 if (_binding == null) {
@@ -246,7 +251,7 @@ class ConversationFragment : Fragment(R.layout.fragment_conversation) {
         )
     }
 
-    private fun resolveSenderNames(envelopes: List<com.bialger.voxclient.data.dto.EnvelopeDto>): Map<String, String> {
+    private fun resolveSenderNames(envelopes: List<VoxConversationEnvelope>): Map<String, String> {
         return emptyMap()
     }
 
@@ -317,7 +322,7 @@ class ConversationFragment : Fragment(R.layout.fragment_conversation) {
         }
         backgroundExecutor.execute {
             val result =
-                repository.loadConversationDetails(
+                loadConversationDetailsUseCase(
                     serverBaseUrl = session.serverBaseUrl,
                     accessToken = session.accessToken,
                     conversationId = conversationId,
@@ -404,14 +409,14 @@ class ConversationFragment : Fragment(R.layout.fragment_conversation) {
         }
         backgroundExecutor.execute {
             val resolved =
-                repository.resolveUserIdByUsername(
+                resolveUserIdByUsernameUseCase(
                     serverBaseUrl = session.serverBaseUrl,
                     accessToken = session.accessToken,
                     username = username,
                 )
             val addResult =
                 if (resolved is VoxResult.Success) {
-                    repository.addConversationMember(
+                    addConversationMemberUseCase(
                         serverBaseUrl = session.serverBaseUrl,
                         accessToken = session.accessToken,
                         conversationId = conversationId,
