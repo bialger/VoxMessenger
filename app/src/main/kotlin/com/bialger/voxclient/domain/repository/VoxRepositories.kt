@@ -21,6 +21,7 @@ import com.bialger.voxclient.core.model.SyncRecordMutation
 import com.bialger.voxclient.core.model.SyncRecordMutationResult
 import com.bialger.voxclient.core.model.SyncWrapParams
 import com.bialger.voxclient.core.model.UserId
+import com.bialger.voxclient.core.model.ServerHealth
 
 interface AuthRepository {
     fun register(command: RegisterCommand): VoxResult<AuthSession>
@@ -157,3 +158,6 @@ interface SettingsRepository {
     fun setOnboardingCompleted(completed: Boolean): VoxResult<Unit>
 }
 
+interface ServerHealthRepository {
+    fun checkHealth(serverBaseUrl: String): VoxResult<ServerHealth>
+}
