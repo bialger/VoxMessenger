@@ -43,11 +43,14 @@ class InMemoryCachingConversationGatewayTest {
     }
 
     @Test
-    fun sendMessage_invalidatesHistoryCacheForConversation() {
+    fun sendMessage_invalidatesHistoryAndConversationListCaches() {
         val delegate = FakeConversationGateway()
         val gateway = InMemoryCachingConversationGateway(delegate)
 
         gateway.loadHistory(BASE_URL, TOKEN, CONVERSATION_ID, 50)
+        gateway.loadConversations(BASE_URL, TOKEN)
+        gateway.loadConversations(BASE_URL, TOKEN)
+
         gateway.sendMessage(
             serverBaseUrl = BASE_URL,
             accessToken = TOKEN,
@@ -59,12 +62,88 @@ class InMemoryCachingConversationGatewayTest {
                     envelopeId = "env_2",
                 ),
         )
+
         gateway.loadHistory(BASE_URL, TOKEN, CONVERSATION_ID, 50)
+        gateway.loadConversations(BASE_URL, TOKEN)
 
         assertEquals(2, delegate.loadHistoryCalls)
+        assertEquals(2, delegate.loadConversationsCalls)
+    }
+
+    @Test
+    fun addConversationMember_invalidatesConversationAndListCaches() {
+        val delegate = FakeConversationGateway()
+        val gateway = InMemoryCachingConversationGateway(delegate)
+
+        primeConversationCaches(gateway)
+
+        gateway.addConversationMember(
+            serverBaseUrl = BASE_URL,
+            accessToken = TOKEN,
+            conversationId = CONVERSATION_ID,
+            userId = "usr_new",
+            role = "member",
+        )
+
+        primeConversationCaches(gateway)
+
+        assertEquals(2, delegate.loadConversationDetailsCalls)
+        assertEquals(2, delegate.loadConversationMembersCalls)
+        assertEquals(2, delegate.loadHistoryCalls)
+        assertEquals(2, delegate.loadConversationsCalls)
+    }
+
+    @Test
+    fun subscribeToChannel_invalidatesConversationAndListCaches() {
+        val delegate = FakeConversationGateway()
+        val gateway = InMemoryCachingConversationGateway(delegate)
+
+        primeConversationCaches(gateway)
+
+        gateway.subscribeToChannel(
+            serverBaseUrl = BASE_URL,
+            accessToken = TOKEN,
+            conversationId = CONVERSATION_ID,
+        )
+
+        primeConversationCaches(gateway)
+
+        assertEquals(2, delegate.loadConversationDetailsCalls)
+        assertEquals(2, delegate.loadConversationMembersCalls)
+        assertEquals(2, delegate.loadHistoryCalls)
+        assertEquals(2, delegate.loadConversationsCalls)
+    }
+
+    @Test
+    fun createConversation_invalidatesConversationListCache() {
+        val delegate = FakeConversationGateway()
+        val gateway = InMemoryCachingConversationGateway(delegate)
+
+        gateway.loadConversations(BASE_URL, TOKEN)
+        gateway.loadConversations(BASE_URL, TOKEN)
+
+        gateway.createDmConversation(
+            serverBaseUrl = BASE_URL,
+            accessToken = TOKEN,
+            peerUserId = "usr_2",
+        )
+
+        gateway.loadConversations(BASE_URL, TOKEN)
+
+        assertEquals(2, delegate.loadConversationsCalls)
+    }
+
+    private fun primeConversationCaches(gateway: InMemoryCachingConversationGateway) {
+        gateway.loadConversationDetails(BASE_URL, TOKEN, CONVERSATION_ID)
+        gateway.loadConversationMembers(BASE_URL, TOKEN, CONVERSATION_ID)
+        gateway.loadHistory(BASE_URL, TOKEN, CONVERSATION_ID, 50)
+        gateway.loadConversations(BASE_URL, TOKEN)
     }
 
     private class FakeConversationGateway : ConversationGateway {
+        var loadConversationDetailsCalls: Int = 0
+        var loadConversationMembersCalls: Int = 0
+        var loadConversationsCalls: Int = 0
         var loadHistoryCalls: Int = 0
 
         override fun resolveUserIdByUsername(
@@ -116,8 +195,9 @@ class InMemoryCachingConversationGatewayTest {
             serverBaseUrl: String,
             accessToken: String,
             conversationId: String,
-        ): VoxResult<VoxConversationDetail> =
-            VoxResult.Success(
+        ): VoxResult<VoxConversationDetail> {
+            loadConversationDetailsCalls += 1
+            return VoxResult.Success(
                 VoxConversationDetail(
                     conversationId = conversationId,
                     type = 0,
@@ -130,13 +210,15 @@ class InMemoryCachingConversationGatewayTest {
                     channelPostPolicy = null,
                 ),
             )
+        }
 
         override fun loadConversationMembers(
             serverBaseUrl: String,
             accessToken: String,
             conversationId: String,
-        ): VoxResult<VoxConversationMembers> =
-            VoxResult.Success(
+        ): VoxResult<VoxConversationMembers> {
+            loadConversationMembersCalls += 1
+            return VoxResult.Success(
                 VoxConversationMembers(
                     conversationId = conversationId,
                     membershipVersion = 1L,
@@ -147,11 +229,27 @@ class InMemoryCachingConversationGatewayTest {
                     memberCount = null,
                 ),
             )
+        }
 
         override fun loadConversations(
             serverBaseUrl: String,
             accessToken: String,
-        ): VoxResult<List<VoxConversationSummary>> = VoxResult.Success(emptyList())
+        ): VoxResult<List<VoxConversationSummary>> {
+            loadConversationsCalls += 1
+            return VoxResult.Success(
+                listOf(
+                    VoxConversationSummary(
+                        conversationId = CONVERSATION_ID,
+                        type = 0,
+                        createdBy = "usr_1",
+                        createdByUsername = "alice",
+                        createdAt = 1L,
+                        membershipVersion = 1L,
+                        lastActivityAt = 2L,
+                    ),
+                ),
+            )
+        }
 
         override fun loadHistory(
             serverBaseUrl: String,

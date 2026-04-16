@@ -165,6 +165,8 @@ class InMemoryCachingConversationGateway(
         ).also { result ->
             if (result is VoxResult.Success) {
                 invalidateConversation(serverBaseUrl, accessToken, conversationId)
+                // Membership changes can affect list metadata (membershipVersion/visibility), so refresh list cache.
+                invalidateConversationList(serverBaseUrl, accessToken)
             }
         }
 
@@ -180,7 +182,7 @@ class InMemoryCachingConversationGateway(
         ).also { result ->
             if (result is VoxResult.Success) {
                 invalidateConversation(serverBaseUrl, accessToken, conversationId)
-                conversationsByAuth.remove(AuthKey(serverBaseUrl, accessToken))
+                invalidateConversationList(serverBaseUrl, accessToken)
             }
         }
 
@@ -291,15 +293,21 @@ class InMemoryCachingConversationGateway(
         ).also { result ->
             if (result is VoxResult.Success) {
                 invalidateHistory(serverBaseUrl, accessToken, command.conversationId)
+                // Sending updates conversation ordering/timestamp on chat list, so list cache must be refreshed.
+                invalidateConversationList(serverBaseUrl, accessToken)
             }
         }
 
     private fun invalidateAuthOnSuccess(serverBaseUrl: String, accessToken: String): (VoxResult<*>) -> Unit =
         { result ->
             if (result is VoxResult.Success) {
-                conversationsByAuth.remove(AuthKey(serverBaseUrl, accessToken))
+                invalidateConversationList(serverBaseUrl, accessToken)
             }
         }
+
+    private fun invalidateConversationList(serverBaseUrl: String, accessToken: String) {
+        conversationsByAuth.remove(AuthKey(serverBaseUrl, accessToken))
+    }
 
     private fun invalidateConversation(serverBaseUrl: String, accessToken: String, conversationId: String) {
         detailByConversation.keys.removeIf {
