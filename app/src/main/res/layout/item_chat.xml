@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginHorizontal="@dimen/vox_spacing_16"
+    android:layout_marginVertical="@dimen/vox_spacing_4"
+    android:background="@drawable/bg_chat_item"
+    android:minHeight="@dimen/vox_chat_item_min_height"
+    android:padding="@dimen/vox_spacing_12">
+
+    <ImageView
+        android:id="@+id/avatarIcon"
+        android:layout_width="@dimen/vox_chat_avatar_size"
+        android:layout_height="@dimen/vox_chat_avatar_size"
+        android:background="@drawable/bg_chat_avatar"
+        android:contentDescription="@string/chat_list_accessibility_avatar"
+        android:padding="@dimen/vox_spacing_12"
+        android:src="@android:drawable/ic_menu_myplaces"
+        android:tint="@color/vox_color_primary"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/titleLabel"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/vox_spacing_12"
+        android:ellipsize="end"
+        android:maxLines="1"
+        android:textAppearance="?attr/textAppearanceBody1"
+        android:textColor="@color/vox_color_on_surface"
+        android:textStyle="bold"
+        app:layout_constraintEnd_toStartOf="@id/timestampLabel"
+        app:layout_constraintStart_toEndOf="@id/avatarIcon"
+        app:layout_constraintTop_toTopOf="@id/avatarIcon" />
+
+    <TextView
+        android:id="@+id/timestampLabel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?attr/textAppearanceCaption"
+        android:textColor="@color/vox_color_subtle_text"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@id/titleLabel" />
+
+    <TextView
+        android:id="@+id/typeLabel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/vox_spacing_4"
+        android:background="@drawable/bg_chat_indicator"
+        android:paddingHorizontal="@dimen/vox_spacing_8"
+        android:paddingVertical="@dimen/vox_spacing_4"
+        android:textAppearance="?attr/textAppearanceCaption"
+        android:textColor="@color/vox_color_subtle_text"
+        app:layout_constraintStart_toStartOf="@id/titleLabel"
+        app:layout_constraintTop_toBottomOf="@id/titleLabel" />
+
+    <TextView
+        android:id="@+id/previewLabel"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/vox_spacing_4"
+        android:ellipsize="end"
+        android:maxLines="1"
+        android:textAppearance="?attr/textAppearanceBody2"
+        android:textColor="@color/vox_color_on_surface"
+        app:layout_constraintEnd_toStartOf="@id/unreadBadge"
+        app:layout_constraintStart_toStartOf="@id/titleLabel"
+        app:layout_constraintTop_toBottomOf="@id/typeLabel" />
+
+    <TextView
+        android:id="@+id/pinnedIndicator"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/vox_spacing_8"
+        android:background="@drawable/bg_chat_indicator"
+        android:paddingHorizontal="@dimen/vox_spacing_8"
+        android:paddingVertical="@dimen/vox_spacing_4"
+        android:text="@string/chat_list_indicator_pinned"
+        android:textAppearance="?attr/textAppearanceCaption"
+        android:textColor="@color/vox_color_subtle_text"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="@id/avatarIcon"
+        app:layout_constraintStart_toStartOf="@id/titleLabel" />
+
+    <TextView
+        android:id="@+id/mutedIndicator"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/vox_spacing_8"
+        android:background="@drawable/bg_chat_indicator"
+        android:paddingHorizontal="@dimen/vox_spacing_8"
+        android:paddingVertical="@dimen/vox_spacing_4"
+        android:text="@string/chat_list_indicator_muted"
+        android:textAppearance="?attr/textAppearanceCaption"
+        android:textColor="@color/vox_color_subtle_text"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="@id/pinnedIndicator"
+        app:layout_constraintStart_toEndOf="@id/pinnedIndicator" />
+
+    <TextView
+        android:id="@+id/encryptionIndicator"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/vox_spacing_8"
+        android:background="@drawable/bg_chat_indicator"
+        android:paddingHorizontal="@dimen/vox_spacing_8"
+        android:paddingVertical="@dimen/vox_spacing_4"
+        android:text="@string/chat_list_indicator_encrypted"
+        android:textAppearance="?attr/textAppearanceCaption"
+        android:textColor="@color/vox_color_secure_accent"
+        app:layout_constraintBottom_toBottomOf="@id/pinnedIndicator"
+        app:layout_constraintStart_toEndOf="@id/mutedIndicator" />
+
+    <TextView
+        android:id="@+id/unreadBadge"
+        android:layout_width="wrap_content"
+        android:layout_height="@dimen/vox_unread_badge_min_size"
+        android:background="@drawable/bg_unread_badge"
+        android:gravity="center"
+        android:minWidth="@dimen/vox_unread_badge_min_size"
+        android:paddingHorizontal="@dimen/vox_spacing_8"
+        android:textAppearance="?attr/textAppearanceCaption"
+        android:textColor="@color/white"
+        android:textStyle="bold"
+        app:layout_constraintBottom_toBottomOf="@id/avatarIcon"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

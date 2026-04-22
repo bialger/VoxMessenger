@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/vox_color_background"
+    android:fitsSystemWindows="true"
+    android:padding="@dimen/vox_spacing_24">
+
+    <TextView
+        android:id="@+id/titleLabel"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="@string/welcome_title"
+        android:textAppearance="?attr/textAppearanceHeadline5"
+        android:textColor="@color/vox_color_on_surface"
+        android:textStyle="bold"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/subtitleLabel"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/vox_spacing_8"
+        android:text="@string/welcome_subtitle"
+        android:textAppearance="?attr/textAppearanceBody1"
+        android:textColor="@color/vox_color_subtle_text"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/titleLabel" />
+
+    <TextView
+        android:id="@+id/securityLabel"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/vox_spacing_8"
+        android:text="@string/welcome_security_text"
+        android:textAppearance="?attr/textAppearanceBody2"
+        android:textColor="@color/vox_color_secure_accent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/subtitleLabel" />
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/serverInputLayout"
+        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/vox_spacing_24"
+        android:hint="@string/welcome_server_hint"
+        app:boxBackgroundColor="@color/vox_color_surface"
+        app:boxStrokeColor="@color/vox_color_border"
+        app:hintTextColor="@color/vox_color_subtle_text"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/securityLabel">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/serverInput"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:inputType="textUri"
+            android:maxLines="1"
+            android:textColor="@color/vox_color_on_surface"
+            android:textColorHint="@color/vox_color_subtle_text" />
+
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <Button
+        android:id="@+id/checkServerButton"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/vox_spacing_16"
+        android:text="@string/welcome_action_check_server"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/serverInputLayout" />
+
+    <Button
+        android:id="@+id/continueAuthButton"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/vox_spacing_12"
+        android:text="@string/welcome_action_continue_auth"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/checkServerButton" />
+
+    <TextView
+        android:id="@+id/serverStatusLabel"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/vox_spacing_16"
+        android:text="@string/welcome_status_not_checked"
+        android:textAppearance="?attr/textAppearanceBody1"
+        android:textColor="@color/vox_color_on_surface"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/continueAuthButton" />
+
+    <TextView
+        android:id="@+id/lastCheckedLabel"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/vox_spacing_4"
+        android:text="@string/welcome_last_checked_placeholder"
+        android:textAppearance="?attr/textAppearanceCaption"
+        android:textColor="@color/vox_color_subtle_text"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/serverStatusLabel" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>
