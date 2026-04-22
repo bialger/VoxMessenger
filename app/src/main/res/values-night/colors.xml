@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="vox_color_primary">#6FB59A</color>
+    <color name="vox_color_primary_variant">#4E8A73</color>
+    <color name="vox_color_on_primary">#091612</color>
+    <color name="vox_color_secondary">#5AA68A</color>
+    <color name="vox_color_background">#101513</color>
+    <color name="vox_color_surface">#171E1B</color>
+    <color name="vox_color_on_surface">#E7F0EB</color>
+    <color name="vox_color_subtle_text">#A7B5AF</color>
+    <color name="vox_color_border">#2E3934</color>
+    <color name="vox_color_unread_badge">#E37C4D</color>
+    <color name="vox_color_secure_accent">#61C992</color>
+
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+</resources>
