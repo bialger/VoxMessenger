@@ -6,12 +6,21 @@ import com.bialger.voxclient.data.datasource.remote.VoxPublicApiFactory
 import com.bialger.voxclient.data.dto.AddConversationMemberRequestDto
 import com.bialger.voxclient.data.dto.ApiErrorEnvelopeDto
 import com.bialger.voxclient.data.dto.ConversationDetailDto
+import com.bialger.voxclient.data.dto.ConversationMemberDto
 import com.bialger.voxclient.data.dto.ConversationMembersResponseDto
 import com.bialger.voxclient.data.dto.ConversationSummaryDto
 import com.bialger.voxclient.data.dto.CreateConversationRequestDto
 import com.bialger.voxclient.data.dto.EnvelopeDto
 import com.bialger.voxclient.data.dto.SendMessageRequestDto
 import com.bialger.voxclient.data.dto.SendMessageResponseDto
+import com.bialger.voxclient.domain.entity.VoxConversationDetail
+import com.bialger.voxclient.domain.entity.VoxConversationEnvelope
+import com.bialger.voxclient.domain.entity.VoxConversationMember
+import com.bialger.voxclient.domain.entity.VoxConversationMembers
+import com.bialger.voxclient.domain.entity.VoxConversationSummary
+import com.bialger.voxclient.domain.entity.VoxSendMessageCommand
+import com.bialger.voxclient.domain.entity.VoxSendMessageReceipt
+import com.bialger.voxclient.domain.repository.ConversationGateway
 import com.google.gson.Gson
 import java.io.IOException
 import retrofit2.Response
@@ -19,9 +28,9 @@ import retrofit2.Response
 class VoxConversationRemoteRepository(
     private val apiFactory: VoxPublicApiFactory = VoxPublicApiFactory(),
     private val gson: Gson = Gson(),
-) {
+) : ConversationGateway {
 
-    fun resolveUsernameByUserId(
+    private fun resolveUsernameByUserId(
         serverBaseUrl: String,
         accessToken: String,
         userId: String,
@@ -63,7 +72,7 @@ class VoxConversationRemoteRepository(
         }
     }
 
-    fun resolveUsernamesByUserIds(
+    override fun resolveUsernamesByUserIds(
         serverBaseUrl: String,
         accessToken: String,
         userIds: Collection<String>,
@@ -145,18 +154,19 @@ class VoxConversationRemoteRepository(
         }
     }
 
-    fun resolveUserIdByUsername(
+    override fun resolveUserIdByUsername(
         serverBaseUrl: String,
         accessToken: String,
         username: String,
     ): VoxResult<String> {
         return try {
-            val response = apiFactory
-                .createDirectoryApi(serverBaseUrl)
-                .resolveByUsername(
-                    authorization = bearer(accessToken),
-                    username = username,
-                ).execute()
+            val response =
+                apiFactory
+                    .createDirectoryApi(serverBaseUrl)
+                    .resolveByUsername(
+                        authorization = bearer(accessToken),
+                        username = username,
+                    ).execute()
 
             if (!response.isSuccessful) {
                 VoxResult.Failure(
@@ -166,8 +176,8 @@ class VoxConversationRemoteRepository(
                     ),
                 )
             } else {
-                val body = response.body()
-                    ?: return VoxResult.Failure(
+                val body =
+                    response.body() ?: return VoxResult.Failure(
                         VoxError.Unknown("Resolve user response body is empty."),
                     )
                 VoxResult.Success(body.userId)
@@ -186,21 +196,23 @@ class VoxConversationRemoteRepository(
         }
     }
 
-    fun createDmConversation(
+    override fun createDmConversation(
         serverBaseUrl: String,
         accessToken: String,
         peerUserId: String,
     ): VoxResult<String> {
         return try {
-            val response = apiFactory
-                .createConversationApi(serverBaseUrl)
-                .createConversation(
-                    authorization = bearer(accessToken),
-                    request = CreateConversationRequestDto(
-                        type = "dm",
-                        peerUserId = peerUserId,
-                    ),
-                ).execute()
+            val response =
+                apiFactory
+                    .createConversationApi(serverBaseUrl)
+                    .createConversation(
+                        authorization = bearer(accessToken),
+                        request =
+                            CreateConversationRequestDto(
+                                type = "dm",
+                                peerUserId = peerUserId,
+                            ),
+                    ).execute()
 
             if (!response.isSuccessful) {
                 VoxResult.Failure(
@@ -210,8 +222,8 @@ class VoxConversationRemoteRepository(
                     ),
                 )
             } else {
-                val body = response.body()
-                    ?: return VoxResult.Failure(
+                val body =
+                    response.body() ?: return VoxResult.Failure(
                         VoxError.Unknown("Create conversation response body is empty."),
                     )
                 VoxResult.Success(body.conversationId)
@@ -230,7 +242,7 @@ class VoxConversationRemoteRepository(
         }
     }
 
-    fun createGroupConversation(
+    override fun createGroupConversation(
         serverBaseUrl: String,
         accessToken: String,
         memberUserIds: List<String>,
@@ -247,7 +259,7 @@ class VoxConversationRemoteRepository(
         )
     }
 
-    fun createChannelConversation(
+    override fun createChannelConversation(
         serverBaseUrl: String,
         accessToken: String,
         adminUserIds: List<String>,
@@ -266,12 +278,12 @@ class VoxConversationRemoteRepository(
         )
     }
 
-    fun addConversationMember(
+    override fun addConversationMember(
         serverBaseUrl: String,
         accessToken: String,
         conversationId: String,
         userId: String,
-        role: String? = null,
+        role: String?,
     ): VoxResult<Unit> {
         return try {
             val response =
@@ -307,7 +319,7 @@ class VoxConversationRemoteRepository(
         }
     }
 
-    fun subscribeToChannel(
+    override fun subscribeToChannel(
         serverBaseUrl: String,
         accessToken: String,
         conversationId: String,
@@ -345,11 +357,11 @@ class VoxConversationRemoteRepository(
         }
     }
 
-    fun loadConversationDetails(
+    override fun loadConversationDetails(
         serverBaseUrl: String,
         accessToken: String,
         conversationId: String,
-    ): VoxResult<ConversationDetailDto> {
+    ): VoxResult<VoxConversationDetail> {
         return try {
             val response =
                 apiFactory
@@ -371,7 +383,7 @@ class VoxConversationRemoteRepository(
                     response.body() ?: return VoxResult.Failure(
                         VoxError.Unknown("Conversation details response body is empty."),
                     )
-                VoxResult.Success(body)
+                VoxResult.Success(body.toDomain())
             }
         } catch (ioe: IOException) {
             VoxResult.Failure(
@@ -387,11 +399,11 @@ class VoxConversationRemoteRepository(
         }
     }
 
-    fun loadConversationMembers(
+    override fun loadConversationMembers(
         serverBaseUrl: String,
         accessToken: String,
         conversationId: String,
-    ): VoxResult<ConversationMembersResponseDto> {
+    ): VoxResult<VoxConversationMembers> {
         return try {
             val response =
                 apiFactory
@@ -413,7 +425,7 @@ class VoxConversationRemoteRepository(
                     response.body() ?: return VoxResult.Failure(
                         VoxError.Unknown("Conversation members response body is empty."),
                     )
-                VoxResult.Success(body)
+                VoxResult.Success(body.toDomain())
             }
         } catch (ioe: IOException) {
             VoxResult.Failure(
@@ -429,12 +441,13 @@ class VoxConversationRemoteRepository(
         }
     }
 
-    fun loadConversations(serverBaseUrl: String, accessToken: String): VoxResult<List<ConversationSummaryDto>> {
+    override fun loadConversations(serverBaseUrl: String, accessToken: String): VoxResult<List<VoxConversationSummary>> {
         return try {
-            val response = apiFactory
-                .createConversationApi(serverBaseUrl)
-                .loadConversations(bearer(accessToken))
-                .execute()
+            val response =
+                apiFactory
+                    .createConversationApi(serverBaseUrl)
+                    .loadConversations(bearer(accessToken))
+                    .execute()
 
             if (!response.isSuccessful) {
                 VoxResult.Failure(
@@ -448,7 +461,7 @@ class VoxConversationRemoteRepository(
                     response.body() ?: return VoxResult.Failure(
                         VoxError.Unknown("Conversation list response body is empty."),
                     )
-                VoxResult.Success(body.conversations)
+                VoxResult.Success(body.conversations.map { it.toDomain() })
             }
         } catch (ioe: IOException) {
             VoxResult.Failure(
@@ -464,22 +477,23 @@ class VoxConversationRemoteRepository(
         }
     }
 
-    fun loadHistory(
+    override fun loadHistory(
         serverBaseUrl: String,
         accessToken: String,
         conversationId: String,
-        limit: Int = DEFAULT_HISTORY_LIMIT,
-    ): VoxResult<List<EnvelopeDto>> {
+        limit: Int,
+    ): VoxResult<List<VoxConversationEnvelope>> {
         return try {
-            val response = apiFactory
-                .createConversationApi(serverBaseUrl)
-                .loadConversationHistory(
-                    authorization = bearer(accessToken),
-                    conversationId = conversationId,
-                    limit = limit,
-                    cursor = null,
-                    since = null,
-                ).execute()
+            val response =
+                apiFactory
+                    .createConversationApi(serverBaseUrl)
+                    .loadConversationHistory(
+                        authorization = bearer(accessToken),
+                        conversationId = conversationId,
+                        limit = limit,
+                        cursor = null,
+                        since = null,
+                    ).execute()
 
             if (!response.isSuccessful) {
                 VoxResult.Failure(
@@ -493,7 +507,7 @@ class VoxConversationRemoteRepository(
                     response.body() ?: return VoxResult.Failure(
                         VoxError.Unknown("Conversation history response body is empty."),
                     )
-                VoxResult.Success(body.envelopes)
+                VoxResult.Success(body.envelopes.map { it.toDomain() })
             }
         } catch (ioe: IOException) {
             VoxResult.Failure(
@@ -509,18 +523,27 @@ class VoxConversationRemoteRepository(
         }
     }
 
-    fun sendMessage(
+    override fun sendMessage(
         serverBaseUrl: String,
         accessToken: String,
-        request: SendMessageRequestDto,
-    ): VoxResult<SendMessageResponseDto> {
+        command: VoxSendMessageCommand,
+    ): VoxResult<VoxSendMessageReceipt> {
         return try {
-            val response = apiFactory
-                .createMessagingApi(serverBaseUrl)
-                .sendMessage(
-                    authorization = bearer(accessToken),
-                    request = request,
-                ).execute()
+            val response =
+                apiFactory
+                    .createMessagingApi(serverBaseUrl)
+                    .sendMessage(
+                        authorization = bearer(accessToken),
+                        request =
+                            SendMessageRequestDto(
+                                deviceId = command.deviceId,
+                                conversationId = command.conversationId,
+                                ciphertext = command.ciphertext,
+                                envelopeId = command.envelopeId,
+                                envelopeType = command.envelopeType,
+                                orderingEpoch = command.orderingEpoch,
+                            ),
+                    ).execute()
 
             if (!response.isSuccessful) {
                 VoxResult.Failure(
@@ -534,7 +557,7 @@ class VoxConversationRemoteRepository(
                     response.body() ?: return VoxResult.Failure(
                         VoxError.Unknown("Send message response body is empty."),
                     )
-                VoxResult.Success(body)
+                VoxResult.Success(body.toDomain())
             }
         } catch (ioe: IOException) {
             VoxResult.Failure(
@@ -607,9 +630,73 @@ class VoxConversationRemoteRepository(
         }
     }
 
+    private fun ConversationSummaryDto.toDomain(): VoxConversationSummary =
+        VoxConversationSummary(
+            conversationId = conversationId,
+            type = type,
+            createdBy = createdBy,
+            createdByUsername = createdByUsername,
+            peerUserId = peerUserId,
+            peerUsername = peerUsername,
+            createdAt = createdAt,
+            membershipVersion = membershipVersion,
+            lastActivityAt = lastActivityAt,
+        )
+
+    private fun ConversationDetailDto.toDomain(): VoxConversationDetail =
+        VoxConversationDetail(
+            conversationId = conversationId,
+            type = type,
+            createdBy = createdBy,
+            createdByUsername = createdByUsername,
+            peerUserId = peerUserId,
+            peerUsername = peerUsername,
+            createdAt = createdAt,
+            membershipVersion = membershipVersion,
+            myRole = myRole,
+            title = title,
+            channelPostPolicy = channelPostPolicy,
+        )
+
+    private fun ConversationMembersResponseDto.toDomain(): VoxConversationMembers =
+        VoxConversationMembers(
+            conversationId = conversationId,
+            membershipVersion = membershipVersion,
+            members = members.orEmpty().map { it.toDomain() },
+            admins = admins.orEmpty().map { it.toDomain() },
+            subscribers = subscribers.orEmpty().map { it.toDomain() },
+            subscriptionState = subscriptionState,
+            memberCount = memberCount,
+        )
+
+    private fun ConversationMemberDto.toDomain(): VoxConversationMember =
+        VoxConversationMember(
+            userId = userId,
+            username = username,
+            role = role,
+        )
+
+    private fun EnvelopeDto.toDomain(): VoxConversationEnvelope =
+        VoxConversationEnvelope(
+            envelopeId = envelopeId,
+            conversationId = conversationId,
+            senderUserId = senderUserId,
+            senderDeviceId = senderDeviceId,
+            ciphertext = ciphertext,
+            serverTimestamp = serverTimestamp,
+            envelopeType = envelopeType,
+            orderingEpoch = orderingEpoch,
+        )
+
+    private fun SendMessageResponseDto.toDomain(): VoxSendMessageReceipt =
+        VoxSendMessageReceipt(
+            envelopeId = envelopeId,
+            serverTimestamp = serverTimestamp,
+            deliveredToCount = deliveredToCount,
+        )
+
     private companion object {
         const val NETWORK_IO_ERROR_CODE = -1
-        const val DEFAULT_HISTORY_LIMIT = 100
         const val MAX_USER_BATCH_SIZE = 100
     }
 }

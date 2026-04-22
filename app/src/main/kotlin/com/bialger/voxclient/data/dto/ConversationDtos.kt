@@ -16,6 +16,10 @@ data class ConversationSummaryDto(
     val createdBy: String,
     @SerializedName("created_by_username")
     val createdByUsername: String? = null,
+    @SerializedName("peer_user_id")
+    val peerUserId: String? = null,
+    @SerializedName("peer_username")
+    val peerUsername: String? = null,
     @SerializedName("created_at")
     val createdAt: Long,
     @SerializedName("membership_version")
@@ -33,6 +37,10 @@ data class ConversationDetailDto(
     val createdBy: String,
     @SerializedName("created_by_username")
     val createdByUsername: String? = null,
+    @SerializedName("peer_user_id")
+    val peerUserId: String? = null,
+    @SerializedName("peer_username")
+    val peerUsername: String? = null,
     @SerializedName("created_at")
     val createdAt: Long,
     @SerializedName("membership_version")

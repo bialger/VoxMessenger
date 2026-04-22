@@ -10,9 +10,8 @@ import com.bialger.voxclient.R
 import com.bialger.voxclient.core.common.error.VoxError
 import com.bialger.voxclient.core.common.result.VoxResult
 import com.bialger.voxclient.core.model.ServerHealth
-import com.bialger.voxclient.data.repository.RetrofitServerHealthRepository
 import com.bialger.voxclient.databinding.FragmentWelcomeBinding
-import com.bialger.voxclient.domain.usecase.CheckServerHealthUseCase
+import com.bialger.voxclient.di.AppGraph
 import com.bialger.voxclient.ui.auth.AuthFragment
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
@@ -28,7 +27,7 @@ class WelcomeFragment : Fragment(R.layout.fragment_welcome) {
     private val mainHandler = Handler(Looper.getMainLooper())
     private val backgroundExecutor: ExecutorService = Executors.newSingleThreadExecutor()
     private val requestGeneration = AtomicLong(0L)
-    private val checkServerHealthUseCase = CheckServerHealthUseCase(RetrofitServerHealthRepository())
+    private val checkServerHealthUseCase = AppGraph.checkServerHealthUseCase
     private val timeFormatter = DateTimeFormatter.ofPattern("HH:mm:ss", Locale.getDefault())
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {

@@ -12,11 +12,11 @@ import androidx.fragment.app.Fragment
 import com.bialger.voxclient.R
 import com.bialger.voxclient.core.common.error.VoxError
 import com.bialger.voxclient.core.common.result.VoxResult
-import com.bialger.voxclient.data.dto.LoginRequestDto
-import com.bialger.voxclient.data.dto.RegisterRequestDto
-import com.bialger.voxclient.data.dto.SyncWrapParamsDto
-import com.bialger.voxclient.data.repository.VoxAuthRemoteRepository
 import com.bialger.voxclient.databinding.FragmentAuthBinding
+import com.bialger.voxclient.di.AppGraph
+import com.bialger.voxclient.domain.entity.VoxLoginCommand
+import com.bialger.voxclient.domain.entity.VoxRegisterCommand
+import com.bialger.voxclient.domain.entity.VoxSyncWrapParams
 import com.bialger.voxclient.ui.chatlist.ChatListFragment
 import com.bialger.voxclient.ui.common.ServerUrlNormalizer
 import com.bialger.voxclient.ui.session.UserSessionArgs
@@ -31,7 +31,9 @@ class AuthFragment : Fragment(R.layout.fragment_auth) {
     private var _binding: FragmentAuthBinding? = null
     private val binding get() = _binding ?: error("Binding is only valid between onViewCreated and onDestroyView")
 
-    private val authRepository = VoxAuthRemoteRepository()
+    private val loginUseCase = AppGraph.loginUseCase
+    private val registerUserUseCase = AppGraph.registerUserUseCase
+    private val loadCurrentUserUseCase = AppGraph.loadCurrentUserUseCase
     private val mainHandler = Handler(Looper.getMainLooper())
     private val backgroundExecutor: ExecutorService = Executors.newSingleThreadExecutor()
     private val secureRandom = SecureRandom()
@@ -101,9 +103,9 @@ class AuthFragment : Fragment(R.layout.fragment_auth) {
             val passwordDerivedValue = sha256Hex(password)
             val result =
                 if (isSignUp) {
-                    authRepository.register(
-                        serverBaseUrl = serverBaseUrl,
-                        request = RegisterRequestDto(
+                    registerUserUseCase(
+                        VoxRegisterCommand(
+                            serverBaseUrl = serverBaseUrl,
                             username = username,
                             passwordDerivedValue = passwordDerivedValue,
                             deviceId = credentials.deviceId,
@@ -117,9 +119,9 @@ class AuthFragment : Fragment(R.layout.fragment_auth) {
                         ),
                     )
                 } else {
-                    authRepository.login(
-                        serverBaseUrl = serverBaseUrl,
-                        request = LoginRequestDto(
+                    loginUseCase(
+                        VoxLoginCommand(
+                            serverBaseUrl = serverBaseUrl,
                             username = username,
                             passwordDerivedValue = passwordDerivedValue,
                             deviceId = credentials.deviceId,
@@ -133,7 +135,7 @@ class AuthFragment : Fragment(R.layout.fragment_auth) {
             val preparedSession =
                 if (result is VoxResult.Success) {
                     val profileResult =
-                        authRepository.loadMe(
+                        loadCurrentUserUseCase(
                             serverBaseUrl = serverBaseUrl,
                             accessToken = result.value.accessToken,
                         )
@@ -279,7 +281,7 @@ class AuthFragment : Fragment(R.layout.fragment_auth) {
         private const val KEY_SYNC_WRAP_SALT = "sync_wrap_salt"
 
         private val DEFAULT_SYNC_WRAP_PARAMS =
-            SyncWrapParamsDto(
+            VoxSyncWrapParams(
                 algorithm = "argon2id",
                 memoryKiB = 65536,
                 iterations = 3,

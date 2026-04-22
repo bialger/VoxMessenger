@@ -4,40 +4,72 @@ import com.bialger.voxclient.core.common.error.VoxError
 import com.bialger.voxclient.core.common.result.VoxResult
 import com.bialger.voxclient.data.datasource.remote.VoxPublicApiFactory
 import com.bialger.voxclient.data.dto.ApiErrorEnvelopeDto
+import com.bialger.voxclient.data.dto.AuthSessionResponseDto
 import com.bialger.voxclient.data.dto.LoginRequestDto
-import com.bialger.voxclient.data.dto.MeResponseDto
 import com.bialger.voxclient.data.dto.RegisterRequestDto
+import com.bialger.voxclient.data.dto.SyncWrapParamsDto
+import com.bialger.voxclient.domain.entity.VoxAuthSession
+import com.bialger.voxclient.domain.entity.VoxLoginCommand
+import com.bialger.voxclient.domain.entity.VoxRegisterCommand
+import com.bialger.voxclient.domain.entity.VoxUserProfile
+import com.bialger.voxclient.domain.repository.AuthSessionGateway
 import com.google.gson.Gson
 import java.io.IOException
 import retrofit2.Response
 
-data class AuthNetworkSession(
-    val userId: String,
-    val accessToken: String,
-    val refreshToken: String,
-    val deviceId: String,
-)
-
 class VoxAuthRemoteRepository(
     private val apiFactory: VoxPublicApiFactory = VoxPublicApiFactory(),
     private val gson: Gson = Gson(),
-) {
+) : AuthSessionGateway {
 
-    fun login(serverBaseUrl: String, request: LoginRequestDto): VoxResult<AuthNetworkSession> =
+    override fun login(command: VoxLoginCommand): VoxResult<VoxAuthSession> =
         executeAuthCall {
-            apiFactory.create(serverBaseUrl).login(request).execute()
+            apiFactory
+                .create(command.serverBaseUrl)
+                .login(
+                    LoginRequestDto(
+                        username = command.username,
+                        passwordDerivedValue = command.passwordDerivedValue,
+                        deviceId = command.deviceId,
+                        deviceLabel = command.deviceLabel,
+                        identityKeyPublic = command.identityKeyPublic,
+                        signedPrekeyPublic = command.signedPrekeyPublic,
+                        signedPrekeySignature = command.signedPrekeySignature,
+                    ),
+                ).execute()
         }.map { session ->
-            session.copy(deviceId = request.deviceId)
+            session.copy(deviceId = command.deviceId)
         }
 
-    fun register(serverBaseUrl: String, request: RegisterRequestDto): VoxResult<AuthNetworkSession> =
+    override fun register(command: VoxRegisterCommand): VoxResult<VoxAuthSession> =
         executeAuthCall {
-            apiFactory.create(serverBaseUrl).register(request).execute()
+            apiFactory
+                .create(command.serverBaseUrl)
+                .register(
+                    RegisterRequestDto(
+                        username = command.username,
+                        passwordDerivedValue = command.passwordDerivedValue,
+                        deviceId = command.deviceId,
+                        deviceLabel = command.deviceLabel,
+                        identityKeyPublic = command.identityKeyPublic,
+                        signedPrekeyPublic = command.signedPrekeyPublic,
+                        signedPrekeySignature = command.signedPrekeySignature,
+                        wrappedSyncKey = command.wrappedSyncKey,
+                        syncWrapSalt = command.syncWrapSalt,
+                        syncWrapParams =
+                            SyncWrapParamsDto(
+                                algorithm = command.syncWrapParams.algorithm,
+                                memoryKiB = command.syncWrapParams.memoryKiB,
+                                iterations = command.syncWrapParams.iterations,
+                                parallelism = command.syncWrapParams.parallelism,
+                            ),
+                    ),
+                ).execute()
         }.map { session ->
-            session.copy(deviceId = request.deviceId)
+            session.copy(deviceId = command.deviceId)
         }
 
-    fun loadMe(serverBaseUrl: String, accessToken: String): VoxResult<MeResponseDto> {
+    override fun loadCurrentUser(serverBaseUrl: String, accessToken: String): VoxResult<VoxUserProfile> {
         return try {
             val response =
                 apiFactory
@@ -56,7 +88,14 @@ class VoxAuthRemoteRepository(
                     response.body() ?: return VoxResult.Failure(
                         VoxError.Unknown("Profile response is empty."),
                     )
-                VoxResult.Success(body)
+                VoxResult.Success(
+                    VoxUserProfile(
+                        userId = body.userId,
+                        username = body.username,
+                        currentDeviceId = body.currentDeviceId,
+                        syncKeyVersion = body.syncKeyVersion,
+                    ),
+                )
             }
         } catch (ioe: IOException) {
             VoxResult.Failure(
@@ -72,7 +111,7 @@ class VoxAuthRemoteRepository(
         }
     }
 
-    private fun executeAuthCall(block: () -> Response<com.bialger.voxclient.data.dto.AuthSessionResponseDto>): VoxResult<AuthNetworkSession> {
+    private fun executeAuthCall(block: () -> Response<AuthSessionResponseDto>): VoxResult<VoxAuthSession> {
         return try {
             val response = block()
             if (!response.isSuccessful) {
@@ -88,11 +127,12 @@ class VoxAuthRemoteRepository(
                         VoxError.Unknown("Authentication returned an empty response body."),
                     )
                 VoxResult.Success(
-                    AuthNetworkSession(
+                    VoxAuthSession(
                         userId = body.userId,
                         accessToken = body.accessToken,
                         refreshToken = body.refreshToken,
                         deviceId = "",
+                        syncKeyVersion = body.syncKeyVersion,
                     ),
                 )
             }
@@ -122,7 +162,7 @@ class VoxAuthRemoteRepository(
         }
     }
 
-    private fun VoxResult<AuthNetworkSession>.map(transform: (AuthNetworkSession) -> AuthNetworkSession): VoxResult<AuthNetworkSession> =
+    private fun VoxResult<VoxAuthSession>.map(transform: (VoxAuthSession) -> VoxAuthSession): VoxResult<VoxAuthSession> =
         when (this) {
             is VoxResult.Success -> VoxResult.Success(transform(value))
             is VoxResult.Failure -> this
