@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="vox_spacing_4">4dp</dimen>
+    <dimen name="vox_spacing_8">8dp</dimen>
+    <dimen name="vox_spacing_12">12dp</dimen>
+    <dimen name="vox_spacing_16">16dp</dimen>
+    <dimen name="vox_spacing_24">24dp</dimen>
+    <dimen name="vox_spacing_32">32dp</dimen>
+
+    <dimen name="vox_chat_avatar_size">48dp</dimen>
+    <dimen name="vox_chat_item_min_height">84dp</dimen>
+    <dimen name="vox_unread_badge_min_size">22dp</dimen>
+</resources>

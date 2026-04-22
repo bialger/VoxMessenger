@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:paddingTop="8dp">
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/memberUsernamesInputLayout"
+        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="@string/chat_create_members_hint"
+        app:boxBackgroundColor="@color/vox_color_surface"
+        app:boxStrokeColor="@color/vox_color_border"
+        app:hintTextColor="@color/vox_color_subtle_text">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/memberUsernamesInput"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:inputType="textMultiLine|textNoSuggestions"
+            android:minLines="2"
+            android:textColor="@color/vox_color_on_surface"
+            android:textColorHint="@color/vox_color_subtle_text" />
+
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/adminUsernamesInputLayout"
+        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/vox_spacing_12"
+        android:hint="@string/chat_create_admins_hint"
+        app:boxBackgroundColor="@color/vox_color_surface"
+        app:boxStrokeColor="@color/vox_color_border"
+        app:hintTextColor="@color/vox_color_subtle_text">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/adminUsernamesInput"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:inputType="textMultiLine|textNoSuggestions"
+            android:minLines="1"
+            android:textColor="@color/vox_color_on_surface"
+            android:textColorHint="@color/vox_color_subtle_text" />
+
+    </com.google.android.material.textfield.TextInputLayout>
+
+</LinearLayout>
