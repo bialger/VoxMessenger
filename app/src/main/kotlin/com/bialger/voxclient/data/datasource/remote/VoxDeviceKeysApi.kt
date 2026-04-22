@@ -13,11 +13,27 @@ import retrofit2.http.PUT
 import retrofit2.http.Path
 
 interface VoxDeviceKeysApi {
+    @POST("v1/users/{user_id}/devices/{device_id}/prekeys")
+    fun publishOneTimePreKeysForUserDevice(
+        @Header("Authorization") authorization: String,
+        @Path("user_id") userId: String,
+        @Path("device_id") deviceId: String,
+        @Body request: PublishPreKeysRequestDto,
+    ): Call<EmptyResponseDto>
+
     @POST("v1/devices/{device_id}/prekeys")
     fun publishOneTimePreKeys(
         @Header("Authorization") authorization: String,
         @Path("device_id") deviceId: String,
         @Body request: PublishPreKeysRequestDto,
+    ): Call<EmptyResponseDto>
+
+    @PUT("v1/users/{user_id}/devices/{device_id}/signed-prekey")
+    fun rotateSignedPreKeyForUserDevice(
+        @Header("Authorization") authorization: String,
+        @Path("user_id") userId: String,
+        @Path("device_id") deviceId: String,
+        @Body request: RotateSignedPreKeyRequestDto,
     ): Call<EmptyResponseDto>
 
     @PUT("v1/devices/{device_id}/signed-prekey")
@@ -26,6 +42,13 @@ interface VoxDeviceKeysApi {
         @Path("device_id") deviceId: String,
         @Body request: RotateSignedPreKeyRequestDto,
     ): Call<EmptyResponseDto>
+
+    @GET("v1/users/{user_id}/devices/{device_id}/prekey-bundle")
+    fun getUserDevicePreKeyBundle(
+        @Header("Authorization") authorization: String,
+        @Path("user_id") userId: String,
+        @Path("device_id") deviceId: String,
+    ): Call<DevicePreKeyBundleDto>
 
     @GET("v1/devices/{device_id}/prekey-bundle")
     fun getDevicePreKeyBundle(

@@ -374,6 +374,28 @@ class VoxApiServicesMockNetworkTest {
     }
 
     @Test
+    fun publishPreKeysForUserDeviceEndpoint_isCovered() {
+        enqueueJson("{}")
+
+        val response =
+            deviceKeysApi.publishOneTimePreKeysForUserDevice(
+                authorization = BEARER,
+                userId = "usr_alice",
+                deviceId = "dev_phone",
+                request =
+                    PublishPreKeysRequestDto(
+                        prekeys = listOf(OneTimePreKeyDto("opk_1", "pub_1")),
+                    ),
+            ).execute()
+
+        assertTrue(response.isSuccessful)
+
+        val request = takeRequest()
+        assertEquals("POST", request.method)
+        assertEquals("/v1/users/usr_alice/devices/dev_phone/prekeys", request.path)
+    }
+
+    @Test
     fun rotateSignedPreKeyEndpoint_isCovered() {
         enqueueJson("{}")
 
@@ -392,20 +414,58 @@ class VoxApiServicesMockNetworkTest {
     }
 
     @Test
+    fun rotateSignedPreKeyForUserDeviceEndpoint_isCovered() {
+        enqueueJson("{}")
+
+        val response =
+            deviceKeysApi.rotateSignedPreKeyForUserDevice(
+                authorization = BEARER,
+                userId = "usr_alice",
+                deviceId = "dev_phone",
+                request = RotateSignedPreKeyRequestDto("spk_pub", "spk_sig"),
+            ).execute()
+
+        assertTrue(response.isSuccessful)
+
+        val request = takeRequest()
+        assertEquals("PUT", request.method)
+        assertEquals("/v1/users/usr_alice/devices/dev_phone/signed-prekey", request.path)
+    }
+
+    @Test
     fun getDevicePreKeyBundleEndpoint_isCovered() {
         enqueueJson(
             """
-            {"device_id":"dev_phone","identity_key_public":"id","signed_prekey_public":"spk","signed_prekey_signature":"sig","one_time_prekey_public":"opk","one_time_prekey_id":"opk_1"}
+            {"user_id":"usr_bob","device_id":"dev_phone","identity_key_public":"id","signed_prekey_public":"spk","signed_prekey_signature":"sig","one_time_prekey_public":"opk","one_time_prekey_id":"opk_1"}
             """.trimIndent(),
         )
 
         val response = deviceKeysApi.getDevicePreKeyBundle(BEARER, "dev_phone").execute()
         assertTrue(response.isSuccessful)
+        assertEquals("usr_bob", response.body()?.userId)
         assertEquals("dev_phone", response.body()?.deviceId)
 
         val request = takeRequest()
         assertEquals("GET", request.method)
         assertEquals("/v1/devices/dev_phone/prekey-bundle", request.path)
+    }
+
+    @Test
+    fun getUserDevicePreKeyBundleEndpoint_isCovered() {
+        enqueueJson(
+            """
+            {"user_id":"usr_bob","device_id":"dev_phone","identity_key_public":"id","signed_prekey_public":"spk","signed_prekey_signature":"sig","one_time_prekey_public":"opk","one_time_prekey_id":"opk_1"}
+            """.trimIndent(),
+        )
+
+        val response = deviceKeysApi.getUserDevicePreKeyBundle(BEARER, "usr_bob", "dev_phone").execute()
+        assertTrue(response.isSuccessful)
+        assertEquals("usr_bob", response.body()?.userId)
+        assertEquals("dev_phone", response.body()?.deviceId)
+
+        val request = takeRequest()
+        assertEquals("GET", request.method)
+        assertEquals("/v1/users/usr_bob/devices/dev_phone/prekey-bundle", request.path)
     }
 
     @Test
@@ -523,7 +583,7 @@ class VoxApiServicesMockNetworkTest {
     fun syncPendingEndpoint_isCovered() {
         enqueueJson(
             """
-            {"envelopes":[{"envelope_id":"env_1","conversation_id":"conv_1","sender_device_id":"dev_remote","ciphertext":"cipher","server_timestamp":100,"envelope_type":0,"ordering_epoch":1}],"next_cursor":"n1","has_more":false}
+            {"envelopes":[{"envelope_id":"env_1","conversation_id":"conv_1","sender_user_id":"usr_remote","sender_device_id":"dev_remote","ciphertext":"cipher","server_timestamp":100,"envelope_type":0,"ordering_epoch":1}],"next_cursor":"n1","has_more":false}
             """.trimIndent(),
         )
 
@@ -539,11 +599,15 @@ class VoxApiServicesMockNetworkTest {
 
     @Test
     fun listConversationsEndpoint_isCovered() {
-        enqueueJson("""{"conversations":[{"conversation_id":"conv_1","type":0,"created_by":"usr_1","created_at":1,"membership_version":3}]}""")
+        enqueueJson(
+            """{"conversations":[{"conversation_id":"conv_1","type":0,"created_by":"usr_1","created_by_username":"alice","peer_user_id":"usr_2","peer_username":"bob","created_at":1,"membership_version":3}]}""",
+        )
 
         val response = conversationApi.loadConversations(BEARER).execute()
         assertTrue(response.isSuccessful)
         assertEquals(1, response.body()?.conversations?.size)
+        assertEquals("usr_2", response.body()?.conversations?.first()?.peerUserId)
+        assertEquals("bob", response.body()?.conversations?.first()?.peerUsername)
 
         val request = takeRequest()
         assertEquals("GET", request.method)
@@ -571,13 +635,15 @@ class VoxApiServicesMockNetworkTest {
     fun getConversationDmShape_isCovered() {
         enqueueJson(
             """
-            {"conversation_id":"conv_dm","type":0,"created_by":"usr_1","created_at":1,"membership_version":2,"my_role":"member"}
+            {"conversation_id":"conv_dm","type":0,"created_by":"usr_1","peer_user_id":"usr_2","peer_username":"bob","created_at":1,"membership_version":2,"my_role":"member"}
             """.trimIndent(),
         )
 
         val response = conversationApi.getConversation(BEARER, "conv_dm").execute()
         assertTrue(response.isSuccessful)
         assertEquals(0, response.body()?.type)
+        assertEquals("usr_2", response.body()?.peerUserId)
+        assertEquals("bob", response.body()?.peerUsername)
         assertEquals(null, response.body()?.title)
         assertEquals(null, response.body()?.channelPostPolicy)
     }
@@ -742,7 +808,7 @@ class VoxApiServicesMockNetworkTest {
 
     @Test
     fun conversationHistoryWithCursorEndpoint_isCovered() {
-        enqueueJson("""{"envelopes":[{"envelope_id":"env_1","conversation_id":"conv_1","sender_device_id":"dev_remote","ciphertext":"cipher","server_timestamp":100,"envelope_type":0}],"next_cursor":"h1","has_more":true}""")
+        enqueueJson("""{"envelopes":[{"envelope_id":"env_1","conversation_id":"conv_1","sender_user_id":"usr_remote","sender_device_id":"dev_remote","ciphertext":"cipher","server_timestamp":100,"envelope_type":0}],"next_cursor":"h1","has_more":true}""")
 
         val response = conversationApi.loadConversationHistory(BEARER, "conv_1", 50, "c1", null).execute()
         assertTrue(response.isSuccessful)

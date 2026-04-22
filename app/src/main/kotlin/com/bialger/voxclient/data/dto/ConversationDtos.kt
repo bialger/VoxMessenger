@@ -14,10 +14,18 @@ data class ConversationSummaryDto(
     val type: Int,
     @SerializedName("created_by")
     val createdBy: String,
+    @SerializedName("created_by_username")
+    val createdByUsername: String? = null,
+    @SerializedName("peer_user_id")
+    val peerUserId: String? = null,
+    @SerializedName("peer_username")
+    val peerUsername: String? = null,
     @SerializedName("created_at")
     val createdAt: Long,
     @SerializedName("membership_version")
     val membershipVersion: Long,
+    @SerializedName("last_activity_at")
+    val lastActivityAt: Long? = null,
 )
 
 data class ConversationDetailDto(
@@ -27,6 +35,12 @@ data class ConversationDetailDto(
     val type: Int,
     @SerializedName("created_by")
     val createdBy: String,
+    @SerializedName("created_by_username")
+    val createdByUsername: String? = null,
+    @SerializedName("peer_user_id")
+    val peerUserId: String? = null,
+    @SerializedName("peer_username")
+    val peerUsername: String? = null,
     @SerializedName("created_at")
     val createdAt: Long,
     @SerializedName("membership_version")
@@ -59,6 +73,8 @@ data class ConversationMembersResponseDto(
 data class ConversationMemberDto(
     @SerializedName("user_id")
     val userId: String,
+    @SerializedName("username")
+    val username: String? = null,
     @SerializedName("role")
     val role: String,
 )

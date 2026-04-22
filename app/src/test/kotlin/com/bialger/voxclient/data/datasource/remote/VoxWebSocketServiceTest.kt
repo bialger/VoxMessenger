@@ -99,10 +99,11 @@ class VoxWebSocketServiceTest {
 
         val envelope =
             service.parseEvent(
-                """{"type":"envelope","envelope_id":"env_1","conversation_id":"conv_1","sender_device_id":"dev_remote","ciphertext":"c","server_timestamp":1,"envelope_type":0,"ordering_epoch":7}""",
+                """{"type":"envelope","envelope_id":"env_1","conversation_id":"conv_1","sender_user_id":"usr_remote","sender_device_id":"dev_remote","ciphertext":"c","server_timestamp":1,"envelope_type":0,"ordering_epoch":7}""",
             )
         assertTrue(envelope is VoxWebSocketEventDto.EnvelopeEvent)
         assertEquals("env_1", (envelope as VoxWebSocketEventDto.EnvelopeEvent).envelopeId)
+        assertEquals("usr_remote", envelope.senderUserId)
 
         val membership =
             service.parseEvent(

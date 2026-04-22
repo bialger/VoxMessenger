@@ -11,6 +11,18 @@ import retrofit2.http.Path
 import retrofit2.http.Query
 
 interface VoxDirectoryApi {
+    @GET("v1/users")
+    fun getUsersByIds(
+        @Header("Authorization") authorization: String,
+        @Query("ids") ids: String?,
+    ): Call<UsersResponseDto>
+
+    @GET("v1/users")
+    fun getUsersByIdsRepeated(
+        @Header("Authorization") authorization: String,
+        @Query("ids") ids: List<String>,
+    ): Call<UsersResponseDto>
+
     @GET("v1/users/by-username/{username}")
     fun resolveByUsername(
         @Header("Authorization") authorization: String,
