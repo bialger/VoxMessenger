@@ -15,6 +15,7 @@
     <string name="welcome_last_checked">Last checked: %1$s</string>
     <string name="welcome_error_server_required">Enter a server URL first.</string>
     <string name="common_action_back">Back</string>
+    <string name="common_error_title">Something went wrong</string>
 
     <string name="auth_title">Account</string>
     <string name="auth_subtitle">Sign in or sign up to continue</string>

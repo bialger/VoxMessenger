@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="utf-8"?>
+<merge xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <ImageView
+        android:id="@+id/avatarIcon"
+        android:layout_width="@dimen/vox_chat_avatar_size"
+        android:layout_height="@dimen/vox_chat_avatar_size"
+        android:background="@drawable/bg_chat_avatar"
+        android:contentDescription="@string/chat_list_accessibility_avatar"
+        android:padding="@dimen/vox_spacing_12"
+        android:src="@android:drawable/ic_menu_myplaces"
+        android:tint="@color/vox_color_primary"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/titleLabel"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/vox_spacing_12"
+        android:ellipsize="end"
+        android:maxLines="1"
+        android:textAppearance="@style/TextAppearance.Vox.SectionTitle"
+        app:layout_constraintEnd_toStartOf="@id/timestampLabel"
+        app:layout_constraintStart_toEndOf="@id/avatarIcon"
+        app:layout_constraintTop_toTopOf="@id/avatarIcon" />
+
+    <TextView
+        android:id="@+id/timestampLabel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="@style/TextAppearance.Vox.Caption"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@id/titleLabel" />
+
+    <TextView
+        android:id="@+id/typeLabel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/vox_spacing_4"
+        android:background="@drawable/bg_chat_indicator"
+        android:paddingHorizontal="@dimen/vox_spacing_8"
+        android:paddingVertical="@dimen/vox_spacing_4"
+        android:textAppearance="@style/TextAppearance.Vox.Caption"
+        app:layout_constraintStart_toStartOf="@id/titleLabel"
+        app:layout_constraintTop_toBottomOf="@id/titleLabel" />
+
+    <TextView
+        android:id="@+id/previewLabel"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/vox_spacing_4"
+        android:ellipsize="end"
+        android:maxLines="1"
+        android:textAppearance="@style/TextAppearance.Vox.Body"
+        app:layout_constraintEnd_toStartOf="@id/unreadBadge"
+        app:layout_constraintStart_toStartOf="@id/titleLabel"
+        app:layout_constraintTop_toBottomOf="@id/typeLabel" />
+
+    <TextView
+        android:id="@+id/pinnedIndicator"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/vox_spacing_8"
+        android:background="@drawable/bg_chat_indicator"
+        android:paddingHorizontal="@dimen/vox_spacing_8"
+        android:paddingVertical="@dimen/vox_spacing_4"
+        android:text="@string/chat_list_indicator_pinned"
+        android:textAppearance="@style/TextAppearance.Vox.Caption"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="@id/avatarIcon"
+        app:layout_constraintStart_toStartOf="@id/titleLabel" />
+
+    <TextView
+        android:id="@+id/mutedIndicator"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/vox_spacing_8"
+        android:background="@drawable/bg_chat_indicator"
+        android:paddingHorizontal="@dimen/vox_spacing_8"
+        android:paddingVertical="@dimen/vox_spacing_4"
+        android:text="@string/chat_list_indicator_muted"
+        android:textAppearance="@style/TextAppearance.Vox.Caption"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="@id/pinnedIndicator"
+        app:layout_constraintStart_toEndOf="@id/pinnedIndicator" />
+
+    <com.bialger.voxclient.ui.designsystem.VoxSecurityBadgeView
+        android:id="@+id/encryptionIndicator"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/vox_spacing_8"
+        android:text="@string/chat_list_indicator_encrypted"
+        app:layout_constraintBottom_toBottomOf="@id/pinnedIndicator"
+        app:layout_constraintStart_toEndOf="@id/mutedIndicator" />
+
+    <com.bialger.voxclient.ui.designsystem.VoxUnreadBadgeView
+        android:id="@+id/unreadBadge"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintBottom_toBottomOf="@id/avatarIcon"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+</merge>

@@ -3,4 +3,22 @@
     <declare-styleable name="ConversationMessageItemView">
         <attr name="voxOutgoing" format="boolean" />
     </declare-styleable>
+
+    <declare-styleable name="VoxTextInput">
+        <attr name="voxHint" format="reference|string" />
+        <attr name="android:inputType" />
+        <attr name="android:imeOptions" />
+        <attr name="android:text" />
+    </declare-styleable>
+
+    <declare-styleable name="VoxStateView">
+        <attr name="voxStateTitle" format="reference|string" />
+        <attr name="voxStateSubtitle" format="reference|string" />
+    </declare-styleable>
+
+    <declare-styleable name="VoxDeviceRowView">
+        <attr name="voxDeviceName" format="reference|string" />
+        <attr name="voxDeviceSubtitle" format="reference|string" />
+        <attr name="voxDeviceStatusColor" format="color|reference" />
+    </declare-styleable>
 </resources>
