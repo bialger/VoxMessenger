@@ -6,44 +6,25 @@
     android:background="@color/vox_color_background"
     android:fitsSystemWindows="true">
 
-    <com.google.android.material.appbar.MaterialToolbar
+    <include
         android:id="@+id/chatListToolbar"
+        layout="@layout/include_vox_top_bar"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:background="@color/vox_color_surface"
-        android:elevation="0dp"
-        android:paddingHorizontal="@dimen/vox_spacing_4"
-        android:title="@string/chat_list_title"
-        android:titleTextColor="@color/vox_color_on_surface"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <com.google.android.material.textfield.TextInputLayout
-        android:id="@+id/searchInputLayout"
-        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+    <com.bialger.voxclient.ui.designsystem.VoxTextInput
+        android:id="@+id/searchInput"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginHorizontal="@dimen/vox_spacing_16"
         android:layout_marginTop="@dimen/vox_spacing_12"
-        android:hint="@string/chat_list_search_hint"
-        app:boxBackgroundColor="@color/vox_color_surface"
-        app:boxStrokeColor="@color/vox_color_border"
-        app:hintTextColor="@color/vox_color_subtle_text"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/chatListToolbar">
-
-        <com.google.android.material.textfield.TextInputEditText
-            android:id="@+id/searchInput"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:imeOptions="actionDone"
-            android:inputType="text"
-            android:textColor="@color/vox_color_on_surface"
-            android:textColorHint="@color/vox_color_subtle_text" />
-
-    </com.google.android.material.textfield.TextInputLayout>
+        app:layout_constraintTop_toBottomOf="@id/chatListToolbar"
+        app:voxHint="@string/chat_list_search_hint" />
 
     <com.google.android.material.tabs.TabLayout
         android:id="@+id/chatFoldersTabs"
@@ -52,15 +33,15 @@
         android:layout_marginHorizontal="@dimen/vox_spacing_8"
         android:layout_marginTop="@dimen/vox_spacing_8"
         android:background="@color/vox_color_background"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/searchInput"
         app:tabIndicatorColor="@color/vox_color_primary"
         app:tabIndicatorFullWidth="false"
         app:tabMode="fixed"
         app:tabRippleColor="@color/vox_color_surface"
         app:tabSelectedTextColor="@color/vox_color_on_surface"
-        app:tabTextColor="@color/vox_color_subtle_text"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/searchInputLayout" />
+        app:tabTextColor="@color/vox_color_subtle_text" />
 
     <androidx.viewpager2.widget.ViewPager2
         android:id="@+id/chatFoldersPager"
@@ -83,9 +64,18 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/chatFoldersTabs" />
 
-    <include
+    <com.bialger.voxclient.ui.designsystem.VoxEmptyStateView
         android:id="@+id/emptyState"
-        layout="@layout/layout_chat_list_empty"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/vox_spacing_12"
+        android:visibility="gone"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/chatFoldersTabs" />
+
+    <com.bialger.voxclient.ui.designsystem.VoxErrorStateView
+        android:id="@+id/errorState"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginTop="@dimen/vox_spacing_12"
