@@ -15,6 +15,16 @@
     <string name="welcome_error_server_required">Сначала введите URL сервера.</string>
     <string name="common_action_back">Назад</string>
 
+    <string name="sdui_title">Уведомления сервера</string>
+    <string name="sdui_status_loading">Загрузка…</string>
+    <string name="sdui_status_nothing_to_show">Нет изменений EULA или обновлений для отображения.</string>
+    <string name="sdui_status_update_required">Перед продолжением требуется обновление.</string>
+    <string name="sdui_action_show_eula_updates">Показать EULA сервера и обновления</string>
+    <string name="sdui_action_accept">Принять</string>
+    <string name="sdui_action_decline">Отклонить</string>
+    <string name="sdui_action_continue">Продолжить</string>
+    <string name="sdui_error_unknown_action">Неизвестное SDUI-действие: %1$s</string>
+
     <string name="auth_title">Аккаунт</string>
     <string name="auth_subtitle">Войдите или зарегистрируйтесь, чтобы продолжить</string>
     <string name="auth_username_hint">Имя пользователя</string>

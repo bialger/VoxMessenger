@@ -15,6 +15,16 @@
     <string name="welcome_error_server_required">Geben Sie zuerst eine Server-URL ein.</string>
     <string name="common_action_back">Zurück</string>
 
+    <string name="sdui_title">Server-Hinweise</string>
+    <string name="sdui_status_loading">Wird geladen…</string>
+    <string name="sdui_status_nothing_to_show">Keine EULA-Änderungen oder Updates zum Anzeigen.</string>
+    <string name="sdui_status_update_required">Vor dem Fortfahren ist ein Update erforderlich.</string>
+    <string name="sdui_action_show_eula_updates">Server-EULA und Updates anzeigen</string>
+    <string name="sdui_action_accept">Akzeptieren</string>
+    <string name="sdui_action_decline">Ablehnen</string>
+    <string name="sdui_action_continue">Weiter</string>
+    <string name="sdui_error_unknown_action">Unbekannte SDUI-Aktion: %1$s</string>
+
     <string name="auth_title">Konto</string>
     <string name="auth_subtitle">Anmelden oder registrieren, um fortzufahren</string>
     <string name="auth_username_hint">Benutzername</string>
