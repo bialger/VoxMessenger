@@ -16,6 +16,16 @@
     <string name="welcome_error_server_required">Enter a server URL first.</string>
     <string name="common_action_back">Back</string>
 
+    <string name="sdui_title">Server notices</string>
+    <string name="sdui_status_loading">Loading…</string>
+    <string name="sdui_status_nothing_to_show">No EULA changes or updates to show.</string>
+    <string name="sdui_status_update_required">Update required before continuing.</string>
+    <string name="sdui_action_show_eula_updates">Show server EULA and updates</string>
+    <string name="sdui_action_accept">Accept</string>
+    <string name="sdui_action_decline">Decline</string>
+    <string name="sdui_action_continue">Continue</string>
+    <string name="sdui_error_unknown_action">Unknown SDUI action: %1$s</string>
+
     <string name="auth_title">Account</string>
     <string name="auth_subtitle">Sign in or sign up to continue</string>
     <string name="auth_username_hint">Username</string>
