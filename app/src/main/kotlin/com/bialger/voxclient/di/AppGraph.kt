@@ -7,10 +7,12 @@ import com.bialger.voxclient.data.repository.cache.InMemoryCachingUsernameGatewa
 import com.bialger.voxclient.data.repository.RetrofitServerHealthRepository
 import com.bialger.voxclient.data.repository.VoxAuthRemoteRepository
 import com.bialger.voxclient.data.repository.VoxConversationRemoteRepository
+import com.bialger.voxclient.data.repository.VoxSduiRemoteRepository
 import com.bialger.voxclient.data.repository.VoxUsernameRemoteRepository
 import com.bialger.voxclient.domain.repository.AuthSessionGateway
 import com.bialger.voxclient.domain.repository.ConversationGateway
 import com.bialger.voxclient.domain.repository.ServerHealthRepository
+import com.bialger.voxclient.domain.repository.SduiGateway
 import com.bialger.voxclient.domain.repository.UsernameGateway
 import com.bialger.voxclient.domain.usecase.AddConversationMemberUseCase
 import com.bialger.voxclient.domain.usecase.CheckServerHealthUseCase
@@ -25,17 +27,26 @@ import com.bialger.voxclient.domain.usecase.LoadConversationHistoryUseCase
 import com.bialger.voxclient.domain.usecase.LoadConversationMembersUseCase
 import com.bialger.voxclient.domain.usecase.LoadCurrentUserUseCase
 import com.bialger.voxclient.domain.usecase.LoginUseCase
+import com.bialger.voxclient.domain.usecase.PostSduiEventUseCase
 import com.bialger.voxclient.domain.usecase.RegisterUserUseCase
 import com.bialger.voxclient.domain.usecase.ResolveUserIdByUsernameUseCase
 import com.bialger.voxclient.domain.usecase.ResolveUsernamesByUserIdsUseCase
+import com.bialger.voxclient.domain.usecase.ResolveSduiScreenUseCase
 import com.bialger.voxclient.domain.usecase.RegisterUsernamesBatchUseCase
 import com.bialger.voxclient.domain.usecase.SendMessageUseCase
 import com.bialger.voxclient.domain.usecase.SubscribeToChannelUseCase
 import com.google.gson.Gson
+import com.google.gson.GsonBuilder
+import com.bialger.voxclient.core.model.SduiNode
+import com.bialger.voxclient.data.serialization.gson.SduiNodeJsonAdapter
 
 object AppGraph {
-    private val apiFactory: VoxPublicApiFactory by lazy { VoxPublicApiFactory() }
-    private val gson: Gson by lazy { Gson() }
+    private val gson: Gson by lazy {
+        GsonBuilder()
+            .registerTypeAdapter(SduiNode::class.java, SduiNodeJsonAdapter())
+            .create()
+    }
+    private val apiFactory: VoxPublicApiFactory by lazy { VoxPublicApiFactory(gson = gson) }
 
     private val authSessionRemoteGateway: AuthSessionGateway by lazy {
         VoxAuthRemoteRepository(apiFactory = apiFactory, gson = gson)
@@ -48,6 +59,9 @@ object AppGraph {
     }
     private val serverHealthRemoteRepository: ServerHealthRepository by lazy {
         RetrofitServerHealthRepository(apiFactory = apiFactory)
+    }
+    private val sduiRemoteGateway: SduiGateway by lazy {
+        VoxSduiRemoteRepository(apiFactory = apiFactory, gson = gson)
     }
     private val authSessionGateway: AuthSessionGateway by lazy {
         InMemoryCachingAuthSessionGateway(authSessionRemoteGateway)
@@ -119,5 +133,13 @@ object AppGraph {
     }
     val sendMessageUseCase: SendMessageUseCase by lazy {
         SendMessageUseCase(conversationGateway)
+    }
+
+    val resolveSduiScreenUseCase: ResolveSduiScreenUseCase by lazy {
+        ResolveSduiScreenUseCase(sduiRemoteGateway)
+    }
+
+    val postSduiEventUseCase: PostSduiEventUseCase by lazy {
+        PostSduiEventUseCase(sduiRemoteGateway)
     }
 }

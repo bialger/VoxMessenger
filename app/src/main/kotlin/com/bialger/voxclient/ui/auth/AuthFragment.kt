@@ -19,6 +19,7 @@ import com.bialger.voxclient.domain.entity.VoxRegisterCommand
 import com.bialger.voxclient.domain.entity.VoxSyncWrapParams
 import com.bialger.voxclient.ui.chatlist.ChatListFragment
 import com.bialger.voxclient.ui.common.ServerUrlNormalizer
+import com.bialger.voxclient.ui.common.DeviceIdStore
 import com.bialger.voxclient.ui.session.UserSessionArgs
 import java.security.MessageDigest
 import java.security.SecureRandom
@@ -213,14 +214,13 @@ class AuthFragment : Fragment(R.layout.fragment_auth) {
 
     private fun readOrCreateAuthMaterial(): AuthMaterial {
         val prefs = requireContext().getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-        val deviceId = prefs.getString(KEY_DEVICE_ID, null) ?: UUID.randomUUID().toString()
+        val deviceId = DeviceIdStore.getOrCreate(requireContext())
         val identityKeyPublic = prefs.getString(KEY_IDENTITY_KEY_PUBLIC, null) ?: randomBase64(32)
         val signedPrekeyPublic = prefs.getString(KEY_SIGNED_PREKEY_PUBLIC, null) ?: randomBase64(32)
         val signedPrekeySignature = prefs.getString(KEY_SIGNED_PREKEY_SIGNATURE, null) ?: randomBase64(64)
         val wrappedSyncKey = prefs.getString(KEY_WRAPPED_SYNC_KEY, null) ?: randomBase64(48)
         val syncWrapSalt = prefs.getString(KEY_SYNC_WRAP_SALT, null) ?: randomBase64(16)
         prefs.edit()
-            .putString(KEY_DEVICE_ID, deviceId)
             .putString(KEY_IDENTITY_KEY_PUBLIC, identityKeyPublic)
             .putString(KEY_SIGNED_PREKEY_PUBLIC, signedPrekeyPublic)
             .putString(KEY_SIGNED_PREKEY_SIGNATURE, signedPrekeySignature)
@@ -273,7 +273,6 @@ class AuthFragment : Fragment(R.layout.fragment_auth) {
         private const val MOCK_USER_ID = "mock_user_id"
         private const val MOCK_USERNAME = "mock"
 
-        private const val KEY_DEVICE_ID = "device_id"
         private const val KEY_IDENTITY_KEY_PUBLIC = "identity_key_public"
         private const val KEY_SIGNED_PREKEY_PUBLIC = "signed_prekey_public"
         private const val KEY_SIGNED_PREKEY_SIGNATURE = "signed_prekey_signature"

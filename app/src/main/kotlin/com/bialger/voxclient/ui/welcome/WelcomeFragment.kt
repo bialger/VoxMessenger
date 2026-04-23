@@ -12,7 +12,8 @@ import com.bialger.voxclient.core.common.result.VoxResult
 import com.bialger.voxclient.core.model.ServerHealth
 import com.bialger.voxclient.databinding.FragmentWelcomeBinding
 import com.bialger.voxclient.di.AppGraph
-import com.bialger.voxclient.ui.auth.AuthFragment
+import com.bialger.voxclient.ui.common.ServerUrlNormalizer
+import com.bialger.voxclient.ui.sdui.SduiFragment
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 import java.util.Locale
@@ -38,10 +39,16 @@ class WelcomeFragment : Fragment(R.layout.fragment_welcome) {
             checkServerHealth()
         }
         binding.continueAuthButton.setOnClickListener {
-            val initialServer = binding.serverInput.text?.toString().orEmpty().trim()
+            val rawServer = binding.serverInput.text?.toString().orEmpty()
+            val initialServer =
+                ServerUrlNormalizer.normalize(rawServer)
+                    ?: run {
+                        binding.serverStatusLabel.text = getString(R.string.welcome_status_invalid_url)
+                        return@setOnClickListener
+                    }
             parentFragmentManager.beginTransaction()
-                .replace(R.id.mainFragmentContainer, AuthFragment.newInstance(initialServer))
-                .addToBackStack(AuthFragment::class.java.simpleName)
+                .replace(R.id.mainFragmentContainer, SduiFragment.newInstance(initialServer))
+                .addToBackStack(SduiFragment::class.java.simpleName)
                 .commit()
         }
     }
