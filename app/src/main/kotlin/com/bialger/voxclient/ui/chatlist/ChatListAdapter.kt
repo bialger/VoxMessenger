@@ -2,7 +2,6 @@ package com.bialger.voxclient.ui.chatlist
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
-import androidx.core.view.isVisible
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
@@ -26,22 +25,16 @@ class ChatListAdapter(
     ) : RecyclerView.ViewHolder(binding.root) {
 
         fun bind(item: ChatListItemUi, onItemClicked: (ChatListItemUi) -> Unit) {
-            binding.titleLabel.text = item.title
-            binding.previewLabel.text = item.preview
-            binding.timestampLabel.text = item.timestampText
-            binding.typeLabel.text = item.typeLabel
-
-            binding.unreadBadge.isVisible = item.unreadCount > 0
-            binding.unreadBadge.text =
-                when {
-                    item.unreadCount > 99 -> "99+"
-                    item.unreadCount > 0 -> item.unreadCount.toString()
-                    else -> ""
-                }
-
-            binding.pinnedIndicator.isVisible = item.isPinned
-            binding.mutedIndicator.isVisible = item.isMuted
-            binding.encryptionIndicator.isVisible = item.isEncrypted
+            binding.root.bind(
+                title = item.title,
+                preview = item.preview,
+                timestamp = item.timestampText,
+                typeLabel = item.typeLabel,
+                unreadCount = item.unreadCount,
+                isPinned = item.isPinned,
+                isMuted = item.isMuted,
+                isEncrypted = item.isEncrypted,
+            )
             binding.root.setOnClickListener { onItemClicked(item) }
         }
     }
