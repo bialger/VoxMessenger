@@ -5,11 +5,9 @@ import android.os.Handler
 import android.os.Looper
 import android.util.Log
 import android.view.View
-import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.core.view.isVisible
-import androidx.core.widget.doAfterTextChanged
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.viewpager2.widget.ViewPager2
@@ -24,6 +22,10 @@ import com.bialger.voxclient.domain.entity.VoxConversationMembers
 import com.bialger.voxclient.domain.entity.VoxConversationSummary
 import com.bialger.voxclient.ui.auth.AuthFragment
 import com.bialger.voxclient.ui.conversation.ConversationFragment
+import com.bialger.voxclient.ui.designsystem.VoxEmptyStateView
+import com.bialger.voxclient.ui.designsystem.VoxErrorStateView
+import com.bialger.voxclient.ui.designsystem.VoxTextInput
+import com.bialger.voxclient.ui.designsystem.VoxTopBar
 import com.bialger.voxclient.ui.session.UserSessionArgs
 import com.bialger.voxclient.ui.session.readUserSessionArgs
 import com.bialger.voxclient.ui.session.toBundle
@@ -63,9 +65,11 @@ class ChatListFragment : Fragment(R.layout.fragment_chat_list) {
     private val usernameByUserId = mutableMapOf<String, String>()
     private val pendingConversationItemsById = linkedMapOf<String, ChatListItemUi>()
 
+    private lateinit var toolbarView: VoxTopBar
+    private lateinit var searchInputView: VoxTextInput
     private lateinit var loadingStateView: View
-    private lateinit var emptyStateView: View
-    private lateinit var emptySubtitleView: TextView
+    private lateinit var emptyStateView: VoxEmptyStateView
+    private lateinit var errorStateView: VoxErrorStateView
     private lateinit var session: UserSessionArgs
     private var currentFolderPosition: Int = 0
     private var folderTabsMediator: TabLayoutMediator? = null
@@ -74,19 +78,22 @@ class ChatListFragment : Fragment(R.layout.fragment_chat_list) {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         _binding = FragmentChatListBinding.bind(view)
+        toolbarView = view.findViewById(R.id.chatListToolbar)
+        searchInputView = view.findViewById(R.id.searchInput)
         loadingStateView = view.findViewById(R.id.loadingState)
         emptyStateView = view.findViewById(R.id.emptyState)
-        emptySubtitleView = view.findViewById(R.id.emptySubtitle)
+        errorStateView = view.findViewById(R.id.errorState)
         session = requireArguments().readUserSessionArgs()
 
-        binding.chatListToolbar.subtitle =
+        toolbarView.subtitle =
             if (session.isMock) {
                 "mock"
             } else {
                 session.username.ifBlank { session.userId }
             }
-        binding.chatListToolbar.inflateMenu(R.menu.chat_list_menu)
-        binding.chatListToolbar.setOnMenuItemClickListener { item ->
+        toolbarView.title = getString(R.string.chat_list_title)
+        toolbarView.inflateMenu(R.menu.chat_list_menu)
+        toolbarView.setOnMenuItemClickListener { item ->
             when (item.itemId) {
                 R.id.menuSwitchAccount -> {
                     parentFragmentManager.beginTransaction()
@@ -100,7 +107,6 @@ class ChatListFragment : Fragment(R.layout.fragment_chat_list) {
             }
         }
 
-        binding.chatFoldersPager.offscreenPageLimit = FOLDER_PAGE_COUNT
         binding.chatFoldersPager.adapter = folderPagerAdapter
         folderTabsMediator =
             TabLayoutMediator(binding.chatFoldersTabs, binding.chatFoldersPager) { tab, position ->
@@ -127,7 +133,7 @@ class ChatListFragment : Fragment(R.layout.fragment_chat_list) {
             showCreateConversationTypeDialog()
         }
 
-        binding.searchInput.doAfterTextChanged { editable ->
+        searchInputView.doAfterTextChanged { editable ->
             viewModel.onSearchQueryChanged(editable?.toString().orEmpty())
         }
         viewModel.uiState.observe(viewLifecycleOwner) { state ->
@@ -194,22 +200,33 @@ class ChatListFragment : Fragment(R.layout.fragment_chat_list) {
         folderPagerAdapter.submitItems(state.items)
         val selectedFolderType = folderPagerAdapter.getFolderTypeAt(currentFolderPosition)
         val hasItems = folderPagerAdapter.getCountForType(selectedFolderType) > 0
+        val showBlockingError =
+            !state.isLoading &&
+                state.emptyMessage != null &&
+                !hasItems &&
+                state.query.isBlank()
+
         binding.chatFoldersTabs.isVisible = !state.isLoading
         binding.chatFoldersPager.isVisible = !state.isLoading && hasItems
-        emptyStateView.isVisible = !state.isLoading && !hasItems
+        errorStateView.isVisible = showBlockingError
+        emptyStateView.isVisible = !state.isLoading && !hasItems && !showBlockingError
 
-        emptySubtitleView.text =
-            when {
-                state.emptyMessage != null -> state.emptyMessage
-                state.query.isBlank() ->
+        if (showBlockingError) {
+            errorStateView.setMessageText(state.emptyMessage.orEmpty())
+        } else {
+            val subtitle =
+                if (state.query.isBlank()) {
                     when (selectedFolderType) {
                         TYPE_DM -> getString(R.string.chat_list_empty_subtitle_dm)
                         TYPE_GROUP -> getString(R.string.chat_list_empty_subtitle_group)
                         TYPE_CHANNEL -> getString(R.string.chat_list_empty_subtitle_channel)
                         else -> getString(R.string.chat_list_empty_subtitle)
                     }
-                else -> getString(R.string.chat_list_empty_for_query, state.query)
-            }
+                } else {
+                    getString(R.string.chat_list_empty_for_query, state.query)
+                }
+            emptyStateView.setSubtitleText(subtitle)
+        }
     }
 
     private fun buildChatListItems(conversations: List<VoxConversationSummary>): List<ChatListItemUi> {
@@ -1057,7 +1074,6 @@ class ChatListFragment : Fragment(R.layout.fragment_chat_list) {
         private const val TYPE_DM = 0
         private const val TYPE_GROUP = 1
         private const val TYPE_CHANNEL = 2
-        private const val FOLDER_PAGE_COUNT = 3
         private const val REFRESH_AFTER_CREATE_MS = 1500L
         private const val REFRESH_AFTER_SUBSCRIBE_SECOND_MS = 3500L
         private val CHANNEL_ID_REGEX = Regex("conv_[A-Za-z0-9_-]+")

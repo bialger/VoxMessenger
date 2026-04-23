@@ -9,6 +9,8 @@
     <color name="vox_color_on_surface">#E7F0EB</color>
     <color name="vox_color_subtle_text">#A7B5AF</color>
     <color name="vox_color_border">#2E3934</color>
+    <color name="vox_color_error">#F2B8B5</color>
+    <color name="vox_color_success">#85D9AF</color>
     <color name="vox_color_unread_badge">#E37C4D</color>
     <color name="vox_color_secure_accent">#61C992</color>
 

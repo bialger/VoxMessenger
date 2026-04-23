@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.bialger.voxclient.ui.designsystem.VoxTopBar xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/voxTopBar"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:minHeight="?attr/actionBarSize"
+    android:paddingTop="@dimen/vox_spacing_8"
+    android:paddingBottom="@dimen/vox_spacing_8"
+    android:paddingHorizontal="@dimen/vox_spacing_4" />

@@ -71,12 +71,15 @@
 
         </com.google.android.material.textfield.TextInputLayout>
 
-        <Button
+        <ImageButton
             android:id="@+id/sendButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
             android:layout_marginStart="@dimen/vox_spacing_8"
-            android:text="@string/conversation_send_action" />
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@string/conversation_send_action"
+            android:src="@drawable/ic_send_24"
+            android:tint="@color/vox_color_primary" />
 
     </LinearLayout>
 
